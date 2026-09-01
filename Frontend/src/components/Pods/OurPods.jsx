@@ -6,10 +6,33 @@ import { Snowflake} from "lucide-react";
 import { IoWifiOutline } from "react-icons/io5";
 import { LuLock } from "react-icons/lu";
 import { FiNavigation } from "react-icons/fi";
-
-
+import API from "../../api/axios";
+import { useState, useEffect } from 'react';
 
 const OurPods = () => {
+    const [pods, setPods] = useState([]);
+
+useEffect(() => {
+
+    const fetchPods = async () => {
+
+        try {
+
+            const response = await API.get("/pods");
+
+            setPods(response.data);
+
+        } catch (error) {
+
+            console.error(error);
+
+        }
+    };
+
+    fetchPods();
+
+}, []);
+
   return (
     <>
     <div className='bg-gradient-to-r from-[#030912] via-[#0b1e3c] to-[#09101b] mt-0'>

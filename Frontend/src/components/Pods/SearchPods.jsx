@@ -3,6 +3,10 @@ import { useSearch } from '../../context/SearchContext';
 import { LuMapPin } from "react-icons/lu";
 import { LuCalendar } from "react-icons/lu";
 import { MdSchedule } from "react-icons/md";
+
+const [pods, setPods] = useState([]);
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState("");
 const podsData = [
   {
     id: 1,
@@ -92,8 +96,85 @@ const podDetails = {
   ],
 };
 
+
 const SearchPods = () => {
+
+  useEffect(() => {
+
+    const searchPods = async () => {
+
+        try {
+
+            setLoading(true);
+            setError("");
+
+            const response = await API.get("/pods/search", {
+                params: {
+                    city: searchCriteria.city,
+                    bookingDate: searchCriteria.date,
+                    time: searchCriteria.time,
+                },
+            });
+
+            setPods(response.data.pods);
+
+        } catch (error) {
+
+            console.error(error);
+
+            setError(
+                error.response?.data?.message ||
+                "Unable to search pods"
+            );
+
+        } finally {
+
+            setLoading(false);
+        }
+    };
+
+    searchPods();
+
+}, [searchCriteria]);
   const { searchCriteria } = useSearch();
+
+  useEffect(() => {
+
+    const searchPods = async () => {
+
+        try {
+
+            setLoading(true);
+            setError("");
+
+            const response = await API.get("/pods/search", {
+                params: {
+                    city: searchCriteria.city,
+                    bookingDate: searchCriteria.date,
+                    time: searchCriteria.time,
+                },
+            });
+
+            setPods(response.data.pods);
+
+        } catch (error) {
+
+            console.error(error);
+
+            setError(
+                error.response?.data?.message ||
+                "Unable to search pods"
+            );
+
+        } finally {
+
+            setLoading(false);
+        }
+    };
+
+    searchPods();
+
+}, [searchCriteria]);
   // 2. Extract your values using the keys defined in Hero.jsx
  useEffect(() => {
     console.log("🚀 Current Search Inputs inside SearchPods:", searchCriteria);

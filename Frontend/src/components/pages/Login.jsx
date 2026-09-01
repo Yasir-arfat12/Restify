@@ -1,16 +1,47 @@
 import React, { useState } from 'react';
 import AuthLayout from '../Layout/AuthLayout';
 import { useNavigate } from 'react-router-dom';
+import API from "../../api/axios";
 
 const Login = ({ switchToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const handleSubmit = (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Logging in setup:', { email, password });
-    // Connect your AuthContext login action here later
-  };
+
+    try {
+        const response = await API.post("/users/login", {
+            email,
+            password,
+        });
+
+        const user = response.data;
+
+        localStorage.setItem("token", user.token);
+
+        localStorage.setItem(
+            "user",
+            JSON.stringify({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+            })
+        );
+
+        navigate("/profileUser");
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            error.response?.data?.message ||
+            "Login failed"
+        );
+    }
+};
 
   return (
     <AuthLayout

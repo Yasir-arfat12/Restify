@@ -1,0 +1,1150 @@
+Controllers --> 
+
+1. billcontroller:
+const generateInvoice = require("../Utils/invoiceGenerator");
+const {calculateGST}  = require("../Utils/gstCalculator");
+const Booking = require("../models/Booking")
+const Bill = require("../models/Bill")
+
+exports.createBill = async (req, res)=> {
+    try{
+        const bookingId = req.params.bookingId;
+        const booking = await Booking.findById(req.params.bookingId).
+        populate("customer")
+        .populate("pod")
+
+        if (!booking){
+            return res.status(404).json({
+                message: "Booking not found"
+            });
+        }
+
+        const existingBill = await Bill.findOne({booking: bookingId})
+
+        if (existingBill){
+            return res.status(400).json({
+                message :"Bill Already Exists for this booking"
+            });
+        }
+
+
+        const subTotal = booking.subtotal
+ 
+        const gst = calculateGST(subTotal)
+        
+        console.log(gst);
+        const bill = await Bill.create({
+            booking: booking._id,
+
+            bookingDate: booking.bookingDate,
+
+            customer: booking.customer._id,
+
+            owner: booking.owner,
+
+            pod: booking.pod._id,
+
+            invoiceNumber: generateInvoice(),
+
+            subTotal,
+
+            gstRate:gst.gstRate,
+
+            gstAmount:gst.gstAmount,
+
+            platformFee: gst.platformFee,
+
+            totalAmount: gst.totalAmount
+
+        });
+
+        res.status(201).json(bill)
+
+    
+    }catch(error){
+        console.error(error)
+        res.status(500).json({
+            message: error.message
+        })
+    }
+}
+
+2. BookingController
+const Pod = require("../models/BookPods")
+const Booking = require("../models/Booking")
+const Bill = require("../models/Bill")
+const generateInvoice = require("../Utils/invoiceGenerator");
+const {calculateGST}  = require("../Utils/gstCalculator");
+exports.createBooking = async (req , res)=> {
+    try{
+
+        const {
+            podId,
+            bookingDate,
+            startTime,
+            endTime
+        } = req.body
+
+        const pod = await Pod.findById(podId)
+
+        if (!pod){
+            return res.status(404).json({
+                message: "Pod Not Found"
+            });
+        }
+
+        const start = Number(startTime.split(":")[0]);
+
+        const end = Number(endTime.split(":")[0]);
+
+        if (end<=start){
+            return res.status(400).json({
+                message: "End Time must be greater than start time"
+            });
+        }
+
+        const duration = end - start;
+
+        const existingBooking = await Booking.findOne({
+            pod: podId,
+            bookingDate: new Date(bookingDate)
+        });
+
+        bookingStatus: {
+            $ne: "Cancelled"
+        }
+
+        if(existingBooking){
+            const bookedStart= Number(existingBooking.startTime.split(":")[0]);
+
+            const bookedEnd = Number(existingBooking.endTime.split(":")[0]);
+
+            const overlap = start < bookedEnd && end > bookedStart
+
+            if (overlap){
+                return res.status(409).json({
+                    message: "Pod Already Booked for Selected time"
+                });
+
+
+            }
+        }
+     
+    const subtotal = duration * pod.hourlyPrice;
+
+    const booking = await Booking.create({
+        customer: req.user._id,
+        owner:pod.owner,
+
+        pod:pod._id,
+
+        bookingDate,
+
+        startTime,
+
+        endTime,
+
+        duration,
+
+        hourlyPrice:pod.hourlyPrice,
+
+        subtotal
+
+    });
+        const subTotal = booking.subtotal
+     
+      const gst = calculateGST(subTotal)
+
+    const bill = await Bill.create({
+
+    booking: booking._id,
+
+    customer: booking.customer,
+
+    owner: booking.owner,
+
+    pod: booking.pod,
+
+    bookingDate: booking.bookingDate,
+
+    invoiceNumber: generateInvoice(),
+
+    subtotal: booking.subtotal,
+
+    gstRate: gst.gstRate,
+
+    gstAmount: gst.gstAmount,
+
+    platformFee: gst.platformFee,
+
+    totalAmount: gst.totalAmount,
+
+    paymentStatus: "Pending"
+
+});
+
+    res.status(201).json({
+        sucess:true,
+        booking,
+        bill
+    })
+
+    }catch(error){
+        console.error(error);
+        res.status(500).json({
+            message: error.message
+        });
+    }
+
+}
+
+3. Pod Controller:
+const Booking = require("../models/Booking");
+const Pod = require("../models/BookPods");
+const user = require("../models/User")
+exports.createdPod = async(req, res)=> {
+    try{
+        const pod = await Pod.create({
+            owner: req.user._id,
+            
+            podName:req.body.podName,
+            
+            description:req.body.description,
+            
+            location:req.body.location,
+            
+            city:req.body.city,
+            
+            state:req.body.state,
+            
+            hourlyPrice:req.body.hourlyPrice,
+            
+            dayPrice:req.body.dayPrice,
+            
+            capacity:req.body.capacity,
+            
+            amenities:req.body.amenities,
+
+            images:req.body.images
+            
+        });
+
+        res.status(201).json({
+            success:true,
+            pod
+        })
+    }
+    catch( error){
+        console.error(error);
+        res.status(500).json({message: "Server Error"})
+    }
+}
+
+exports.getPods= async (req, res)=> {
+
+    try {
+        const pods = await Pod.find().populate("owner", "name email");
+        res.json(pods);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({message: "Server Error"});
+    }
+};
+
+exports.getMyPods = async (req,res)=> {
+
+    try {
+        const pods = await Pod.find({
+            owner: req.user._id
+        });
+
+        res.json(pods);
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({message: "Server Error"})
+    }
+}
+
+exports.UpdatePod = async (req, res)=> {
+    try {
+        const pod = await Pod.findById(req.params.id);
+
+        if(!pod){
+            res.status(404).json({
+                message: "Pod Not Found"
+            });
+        }
+        if (req.user.role != "admin" && pod.owner.toString != req.user._id.toString()){
+            res.status(403).json({message: "Access Denied"})
+        } 
+    
+        pod.podName=req.body.podName || pod.podName;
+
+        pod.description=req.body.description || pod.description;
+
+        pod.location=req.body.location || pod.location;
+
+        pod.city=req.body.city || pod.city;
+
+        pod.state=req.body.state || pod.state;
+
+        pod.hourlyPrice=req.body.hourlyPrice || pod.hourlyPrice;
+
+        pod.dayPrice=req.body.dayPrice || pod.dayPrice;
+
+        pod.capacity=req.body.capacity || pod.capacity;
+
+        pod.amenities=req.body.amenities || pod.amenities;
+
+        pod.images=req.body.images || pod.images;
+
+            await pod.save();
+
+            res.json(pod);
+
+            }
+
+        catch(error){
+            console.error(error);
+            res.status(500).json({
+
+            message:error.message
+
+            });
+
+    }
+ }
+ exports.DeletePods = async (req, res)=> {
+    try{
+    const pod = await Pod.findById(req.params.id);
+    if(!pod){
+        res.status(404).json({
+            message:"Pod Not Found"
+        });
+    }
+    if (req.user.role != "admin" && pod.owner.toString()!= req.user._id.toString()){
+        res.status(403).json({
+            message: "Access Denied"
+        });
+    }
+    
+    await pod.deleteOne();
+
+    res.json({
+        message:"Pod Deleted"
+    })
+ }catch(error){
+    console.error(error);
+    res.status(500).json({
+        message:"Server Error"
+    });
+ }
+} 
+
+exports.searchPods = async (req,res)=> {
+    try{
+        const {
+            city,
+            location,
+            podName,
+            minPrice,
+            maxPrice,
+            capacity,
+            date,
+            time,
+            bookingDate
+        }=req.query;
+
+        const filter = {
+
+        };
+        if (city){
+            filter.city={
+                $regex:city,
+                $options:"i"
+            }
+        };
+        if (location){
+            filter.location={
+                $regex : location,
+                $options:"i"
+            }
+        }
+        if(podName){
+            filter.podName = {
+                $regex:podName,
+                $options:"i"
+            }
+        }
+        if(capacity){
+            filter.capacity = {
+                $gte:Number(capacity)
+            }
+        }
+
+        if (minPrice || maxPrice){
+            filter.hourlyPrice={}
+            if (minPrice){
+                filter.hourlyPrice.$gte=Number(minPrice)
+            }
+            if (maxPrice){
+                filter.hourlyPrice.$gte=Number(maxPrice)
+            }
+        }
+
+
+    const pods = await Pod.find(filter)
+    .populate("owner","name,email")
+    .sort({
+        hourlyPrice:1
+    });
+   // search available pods
+  /*  const availablePods = pods;
+
+    if (bookingDate){
+        const bookedPods = await Booking.find({
+            bookingDate: new Date(bookingDate),
+            bookingStatus:{
+                 $in: ["Pending", "Confirmed"]
+            }
+        }).select("pod")
+    }
+
+    const bookedPodsId = bookedPods.map((booking)=> {
+        booking.pod.toString()
+    })
+ 
+    availablePods = pods.filter((pod)=> {
+        !bookedPodsId.includes(pod._id.toString())
+    })
+         */
+    res.json({
+        success:true,
+        count:pods.length,
+        pods
+    })    
+    }catch(error){
+        console.error(error);
+        res.status(500).json({message:error.message})
+    }
+}
+
+4. UserController:
+const User = require("../models/User");
+const generateToken = require("../Utils/generateToken");
+
+
+// Register
+
+exports.registerUser = async(req,res)=>{
+
+try{
+const {name,email,password,role}=req.body;
+
+const userExists = await User.findOne({email});
+
+if(userExists){
+
+return res.status(400).json({
+
+message:"User already exists"
+
+});
+
+}
+
+const user = await User.create({
+
+name,
+email,
+password,
+role
+
+});
+
+res.status(201).json({
+
+_id:user._id,
+
+name:user.name,
+
+email:user.email,
+
+role:user.role,
+
+token:generateToken(user._id)
+
+});
+
+}
+
+catch(error){
+console.error(error)
+res.status(500).json({
+
+message:error.message
+
+});
+
+}
+
+};
+
+
+// Login
+
+exports.loginUser = async(req,res)=>{
+
+try{
+
+const {email,password}=req.body;
+
+const user = await User.findOne({email});
+
+if(user && await user.matchPassword(password)){
+
+res.json({
+
+_id:user._id,
+
+name:user.name,
+
+email:user.email,
+
+role:user.role,
+
+token:generateToken(user._id)
+
+});
+
+}
+
+else{
+
+res.status(401).json({
+
+message:"Invalid Credentials"
+
+});
+
+}
+
+}
+
+catch(error){
+
+res.status(500).json({
+
+message:error.message
+
+});
+
+}
+
+};
+
+
+// Profile
+
+exports.getProfile = async(req,res)=>{
+
+const user = await User.findById(req.user._id).select("-password");
+
+res.json(user);
+
+};
+
+Middlewares-->
+1. AuthMiddlewares:
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+
+const protect = async(req,res,next)=>{
+
+let token;
+
+if(
+
+req.headers.authorization &&
+
+req.headers.authorization.startsWith("Bearer")
+
+){
+
+try{
+
+token = req.headers.authorization.split(" ")[1];
+
+const decoded = jwt.verify(token,process.env.JWT_SECRET_KEY);
+
+req.user = await User.findById(decoded.id).select("-password");
+
+next();
+
+}
+
+catch(error){
+
+return res.status(401).json({
+
+message:"Not Authorized"
+
+});
+
+}
+
+}
+
+else{
+
+return res.status(401).json({
+
+message:"No Token"
+
+});
+
+}
+
+};
+
+module.exports = {protect}
+
+2. Rolemiddleware:
+const authorize = (...roles)=>{
+
+return(req,res,next)=>{
+
+if(!roles.includes(req.user.role)){
+
+return res.status(403).json({
+
+message:"Access Denied"
+
+});
+
+}
+
+next();
+
+};
+
+};
+
+module.exports ={ authorize}
+
+Models --> 
+1. Bill.js:
+const mongoose = require("mongoose");
+
+const BillSchema = new mongoose.Schema({
+    
+     booking:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Booking",
+        required:true,
+        unique: true
+    },
+    owner: {
+        type: mongoose.Schema.ObjectId,
+        required:true,
+        ref:"User"
+    },
+    customer: {
+        type: mongoose.Schema.ObjectId,
+        required:true,
+        ref: "User"
+    },
+    invoiceNumber: {
+        type:String,
+        required:true,
+        unique:true,
+    },
+    pod: {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+        required: true
+    },
+    bookingDate: {
+        type: Date,
+        required: true
+    },
+
+
+    subtotal:Number,
+
+    gstRate:{
+        type:Number,
+        default:5
+    },
+
+    gstAmount:{
+        type:Number
+    },
+
+    platformFee:{
+        type:Number,
+        default:10
+    },
+
+    totalAmount:{
+        type:Number
+    },
+
+    paymentStatus:{
+        type:String,
+        enum:["Pending","Paid","Failed","Refunded"],
+        default:"Pending"
+    },
+
+    paymentId:String,
+
+    paidAt:Date
+
+},{
+    timestamps:true
+});
+
+module.exports = mongoose.model("Bill", BillSchema);
+
+2. Booking.js:
+const mongoose = require("mongoose")
+
+const BookingSchema = new mongoose.Schema({
+
+    customer: {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+        required: true
+    },
+    owner: {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+        required: true
+    },
+    pod: {
+        type: mongoose.Schema.ObjectId,
+        required: true,
+        ref: "Pod"
+    },
+    bookingDate:{
+        type: Date,
+        required: true
+    },
+    startTime: {
+        type: String,
+        required:true
+    },
+    endTime: {
+        type: String,
+        required: true
+    },
+    duration: {
+        type: Number,
+        required:true
+    },
+    hourlyPrice: {
+        type: Number,
+        required: true
+    },
+
+        subtotal:{
+        type:Number,
+        required:true
+    },
+
+    bookingStatus:{
+        type:String,
+        enum:[
+            "Pending",
+            "Confirmed",
+            "Completed",
+            "Cancelled"
+        ],
+        default:"Pending"
+    },
+
+    paymentStatus:{
+        type:String,
+        enum:[
+            "Pending",
+            "Paid",
+            "Refunded"
+        ],
+        default:"Pending"
+    }
+
+},{
+    timestamps:true
+});
+
+module.exports = mongoose.model("Booking", BookingSchema)
+
+3 Bookpods.js
+const mongoose = require("mongoose")
+
+const podSchema = new mongoose.Schema({
+    owner: {
+        type:mongoose.Schema.ObjectId,
+        ref:"User",
+        required: true
+    },
+    podName:{
+        type:String,
+        required:true,
+
+    },
+    description:{
+        type:String,
+        required:true
+    },
+    location:{
+        type:String,
+        required:true
+    },
+    city:{
+        type:String,
+        required:true,
+    },
+    state:{
+        type:String,
+        required:true
+    },
+    hourlyPrice:{
+        type:Number,
+        required:true
+    },
+    dayPrice:{
+        type:Number,
+        required:true
+    },
+    capacity:{
+        type:Number,
+        default:1
+    },
+    amenities:[String],
+
+    status:{
+        type:String,
+        enum:["Available","Booked","Maintainence"],
+        default:"Available"
+    },
+    images:[String]
+},{
+    timestamps:true
+})
+
+module.exports = mongoose.model("Pod",podSchema);
+
+4. payment.js
+
+const mongoose = require("mongoose")
+
+const paymentSchema = new mongoose.Schema({
+
+        booking:{
+            type: mongoose.Schema.ObjectId,
+            required:true,
+            ref:"User"
+        },
+        bill:{
+            type:mongoose.Schema.ObjectId,
+            required:true,
+            ref:"Bill"
+        },
+        customer:{
+            type:mongoose.Schema.ObjectId,
+            ref:"User",
+            required:true
+        },
+        razorpayOrderId:{
+            type:String,
+            required:true
+        },
+        razorpayPaymentId:{
+            type:String
+        },
+        amount:{
+            type:Number,
+            required:true
+        },
+        currency:{
+            type:Number,
+            default:"INR"
+        },
+        status:{
+            type:String,
+            enum:[
+                "Pending",
+                "Success",
+                "Failed",
+                "Refunded"
+            ],
+            default:"Pending"
+        },
+},{timestamps:true});
+
+module.exports = mongoose.model("Payment",paymentSchema)
+
+4. User.js
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+
+const userSchema = new mongoose.Schema(
+{
+    name:{
+        type:String,
+        required:true
+    },
+
+    email:{
+        type:String,
+        required:true,
+        unique:true,
+        lowercase:true
+    },
+
+    password:{
+        type:String,
+        required:true,
+        minlength:6
+    },
+
+    role:{
+        type:String,
+        enum:["admin","owner","customer"],
+        default:"customer"
+    }
+
+},
+{
+    timestamps:true
+});
+
+userSchema.pre("save", async function () {
+
+    if (!this.isModified("password")) {
+        return;
+    }
+
+    this.password = await bcrypt.hash(this.password, 10);
+
+});
+
+userSchema.methods.matchPassword = async function(password){
+
+    return await bcrypt.compare(password,this.password);
+
+};
+
+module.exports = mongoose.model("User",userSchema);
+
+ROUTES --> 
+1. billRoutes:
+const express  = require("express")
+const router = express.Router()
+
+const {protect} = require("../middlewares/authMiddlewares")
+const {authorize} = require("../middlewares/roleMiddleware")
+
+const {
+    createBill
+} = require("../Controllers/BillControllers")
+
+router.post("/:bookingId",protect,authorize("customer","admin"),
+                createBill)
+
+module.exports = router                
+
+2. BookingRoutes: 
+const express = require("express");
+
+const router = express.Router();
+
+const {protect} = require("../middlewares/authMiddlewares")
+
+const {authorize} = require("../middlewares/roleMiddleware");
+
+const {
+    createdPod,
+    getPods,
+    getMyPods,
+    UpdatePod,
+    DeletePods,
+    searchPods
+} = require("../Controllers/podControllers")
+
+router.post("/create-pod", protect, authorize("admin","owner"),createdPod)
+
+router.get("/", getPods);
+
+router.get("/myPods",protect,authorize("owner"), getMyPods);
+
+router.post("/:id", protect, authorize("owner", "admin"), UpdatePod);
+
+router.delete("/:id",protect, authorize("owner", "admin"), DeletePods);
+
+router.get("/search",protect, searchPods)
+module.exports = router
+
+3. PodRoutes: 
+const express = require("express")
+const router = express.Router();
+
+const {protect} = require("../middlewares/authMiddlewares");
+const {authorize} = require("../middlewares/roleMiddleware");
+
+const {
+    createBooking
+} = require("../Controllers/BookingController");
+
+router.post("/", protect, authorize("customer"), createBooking);
+
+
+module.exports = router
+
+4. UserRoutes:
+const express = require("express");
+const router = express.Router();
+
+const {
+
+registerUser,
+
+loginUser,
+
+getProfile
+
+}=require("../Controllers/UserControllers");
+
+const {protect} = require("../middlewares/authMiddlewares")
+const {authorize} = require("../middlewares/roleMiddleware")
+
+
+
+router.post("/register",registerUser);
+
+router.post("/login",loginUser);
+
+router.get("/profile",
+
+protect,
+
+getProfile
+
+);
+
+
+router.get("/admin",
+
+protect,
+
+authorize("admin"),
+
+(req,res)=>{
+
+res.json({
+
+message:"Welcome Admin"
+
+});
+
+}
+
+);
+
+module.exports=router;
+
+utils:
+1. generateToken:
+const jwt = require("jsonwebtoken");
+
+const generateToken = (id)=>{
+
+    return jwt.sign(
+
+        {id},
+
+        process.env.JWT_SECRET_KEY,
+
+        {
+            expiresIn:"7d"
+        }
+
+    );
+
+}
+
+module.exports = generateToken;
+
+2. GstCalculator:
+const jwt = require("jsonwebtoken");
+
+const generateToken = (id)=>{
+
+    return jwt.sign(
+
+        {id},
+
+        process.env.JWT_SECRET_KEY,
+
+        {
+            expiresIn:"7d"
+        }
+
+    );
+
+}
+
+module.exports = generateToken;
+
+3. InvoiceGenerator: 
+const crypto = require("crypto")
+
+const generateInvoice = ()=> {
+
+    const year = new Date().getFullYear();
+
+    const random = crypto.randomBytes(3).toString("hex").toUpperCase();
+
+    return `RST-${year}-${random}`;
+}
+
+module.exports = generateInvoice
+
+Server.js --> 
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv")
+const jwt = require("jsonwebtoken");
+const connectDB = require("./config/db")
+const BookingRoutes = require("./routes/BookingRoutes")
+const UserRoutes  = require("./routes/UserRoutes")
+const BillRoutes = require("./routes/BillRoutes")
+const BookingPodRoutes = require("./routes/BookPodRoutes")
+const app = express();
+app.use(express.json());
+app.use(cors());
+
+dotenv.config();
+const PORT = process.env.PORT || 3000;
+
+app.get("/", (req, res)=> {
+    res.send("Welcome to Restify")
+});
+
+//connect mongodb
+connectDB();
+
+
+// connect routes
+app.use("/api/users",UserRoutes)
+app.use("/api/pods", BookingRoutes)
+app.use("/api/bill",BillRoutes)
+app.use("/api/bookings", BookingPodRoutes)
+console.log("server started")
+app.listen(PORT, ()=> {
+    console.log("server running on", PORT);
+    
+})
+
+

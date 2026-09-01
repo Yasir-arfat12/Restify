@@ -1,14 +1,34 @@
-import React, { useState } from "react";
 
+import React, { useEffect, useState } from "react";
+import API from "../../api/axios";
 const ProfileLogIn = () => {
     // Normally this data will come from your backend API
-  const users = [
-    {
-      name: "Yasir Arfat",
-      email: "yasir@example.com",
-      photo: "https://i.pravatar.cc/150?img=12",
-    },
-  ];
+const [user, setUser] = useState(null);
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+
+    const fetchProfile = async () => {
+
+        try {
+
+            const response = await API.get("/users/profile");
+
+            setUser(response.data);
+
+        } catch (error) {
+
+            console.error(error);
+
+        } finally {
+
+            setLoading(false);
+        }
+    };
+
+    fetchProfile();
+
+}, []);
   return (
 
 

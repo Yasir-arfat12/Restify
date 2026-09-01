@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
+import API from "../../api/axios";
 import AuthLayout from '../Layout/AuthLayout';
 import { useNavigate } from 'react-router-dom';
 const Register = ({ switchToLogin }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    agreeTerms: false,
+              name: '',
+            email: '',
+             password: '',
+            confirmPassword: '',
+           agreeTerms: false,
+
   });
   const navigate = useNavigate();
 
@@ -19,15 +21,47 @@ const Register = ({ switchToLogin }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   if (formData.password !== formData.confirmPassword) {
+  //     alert("Passwords don't match!");
+  //     return;
+  //   }
+  //   console.log('Registering account with:', formData);
+  //   // Connect your AuthContext registration action here later
+  // };
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!");
-      return;
+        alert("Passwords don't match!");
+        return;
     }
-    console.log('Registering account with:', formData);
-    // Connect your AuthContext registration action here later
-  };
+
+    try {
+        const response = await API.post("/users/register", {
+             name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            role: "customer",
+        });
+
+        console.log(response.data);
+
+        alert("Registration successful!");
+
+        navigate("/login");
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            error.response?.data?.message ||
+            "Registration failed"
+        );
+    }
+};
 
   return (
     <AuthLayout
