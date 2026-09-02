@@ -10,7 +10,9 @@ import SearchPods from "./components/Pods/SearchPods";
 import ProfileLogIn from "./components/pages/ProfileLogIn"
 import Login from "./components/pages/Login";
 import Register from "./components/pages/Register";
-
+import RoleRoute from "./components/Layout/RoleRoute";
+import OwnerDashboard from "./components/pages/OwnerDashboard";
+import AdminDashboard from "./components/pages/AdminDashboard";
 function App() {
   return (
     <SearchProvider>
@@ -24,7 +26,35 @@ function App() {
         <Route path="pods" element={<OurPods/>}/>
         <Route path="searchpods" element={<SearchPods/>}/> 
         <Route path="profile" element={<ProfileLogIn/>}/>
-        <Route path="profileUser" element={<ProfileUser/>}/>   
+        <Route path="profileUser" element={<ProfileUser/>}/> 
+         <Route element={
+                        <RoleRoute
+                            allowedRoles={["owner"]}
+                        />
+                    }>
+
+                        <Route
+                            path="/owner/dashboard"
+                            element={<OwnerDashboard />}
+                        />
+
+                    </Route>
+
+
+                    {/* ADMIN */}
+
+                    <Route element={
+                        <RoleRoute
+                            allowedRoles={["admin"]}
+                        />
+                    }>
+
+                        <Route
+                            path="/admin/dashboard"
+                            element={<AdminDashboard />}
+                        />
+
+                    </Route>  
       </Route>    
     </Routes>
    </BrowserRouter>
