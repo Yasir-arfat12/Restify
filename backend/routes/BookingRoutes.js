@@ -2,9 +2,8 @@ const express = require("express");
 
 const router = express.Router();
 
-const {protect} = require("../middlewares/authMiddlewares")
-
-const {authorize} = require("../middlewares/roleMiddleware");
+const { protect } = require("../middlewares/authMiddlewares");
+const { authorize } = require("../middlewares/roleMiddleware");
 
 const {
     createdPod,
@@ -13,17 +12,81 @@ const {
     UpdatePod,
     DeletePods,
     searchPods
-} = require("../Controllers/podControllers")
+} = require("../Controllers/podControllers");
 
-router.post("/create-pod", protect, authorize("admin","owner"),createdPod)
 
-router.get("/", getPods);
+// =====================================================
+// SEARCH PODS
+// PUBLIC ROUTE
+// =====================================================
 
-router.get("/myPods",protect,authorize("owner"), getMyPods);
+router.get(
+    "/pods/search",
+    searchPods
+);
 
-router.post("/:id", protect, authorize("owner", "admin"), UpdatePod);
 
-router.delete("/:id",protect, authorize("owner", "admin"), DeletePods);
+// =====================================================
+// GET ALL PODS
+// PUBLIC ROUTE
+// =====================================================
 
-router.get("/search",protect, searchPods)
-module.exports = router
+router.get(
+    "/",
+    getPods
+);
+
+
+// =====================================================
+// CREATE POD
+// ADMIN / OWNER ONLY
+// =====================================================
+
+router.post(
+    "/create-pod",
+    protect,
+    authorize("admin", "owner"),
+    createdPod
+);
+
+
+// =====================================================
+// GET MY PODS
+// OWNER ONLY
+// =====================================================
+
+router.get(
+    "/myPods",
+    protect,
+    authorize("owner"),
+    getMyPods
+);
+
+
+// =====================================================
+// UPDATE POD
+// ADMIN / OWNER ONLY
+// =====================================================
+
+router.post(
+    "/:id",
+    protect,
+    authorize("owner", "admin"),
+    UpdatePod
+);
+
+
+// =====================================================
+// DELETE POD
+// ADMIN / OWNER ONLY
+// =====================================================
+
+router.delete(
+    "/:id",
+    protect,
+    authorize("owner", "admin"),
+    DeletePods
+);
+
+
+module.exports = router;

@@ -151,7 +151,7 @@ const PodManagement = () => {
       images: formData.images
     };
 
-    await API.post("/pods", payload);
+    await API.post("/search", payload);
 
     setSuccess("Pod submitted successfully.");
 

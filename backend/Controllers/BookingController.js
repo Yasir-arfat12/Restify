@@ -1,127 +1,678 @@
-const Pod = require("../models/BookPods")
-const Booking = require("../models/Booking")
-const Bill = require("../models/Bill")
+const Pod = require("../models/BookPods");
+const Booking = require("../models/Booking");
+const Bill = require("../models/Bill");
 const generateInvoice = require("../Utils/invoiceGenerator");
-const {calculateGST}  = require("../Utils/gstCalculator");
-exports.createBooking = async (req , res)=> {
-    try{
+const { calculateGST } = require("../Utils/gstCalculator");
+
+
+// ----------------------------------------------------
+// Helper: Convert HH:MM into minutes
+// ----------------------------------------------------
+const timeToMinutes = (time) => {
+    if (!time || !/^\d{2}:\d{2}$/.test(time)) {
+        return null;
+    }
+
+    const [hours, minutes] = time.split(":").map(Number);
+
+    if (
+        hours < 0 ||
+        hours > 23 ||
+        minutes < 0 ||
+        minutes > 59
+    ) {
+        return null;
+    }
+
+    return hours * 60 + minutes;
+};
+
+
+// ----------------------------------------------------
+// Helper: Check whether two time ranges overlap
+// ----------------------------------------------------
+const isOverlapping = (
+    requestedStart,
+    requestedEnd,
+    bookedStart,
+    bookedEnd
+) => {
+    return (
+        requestedStart < bookedEnd &&
+        requestedEnd > bookedStart
+    );
+};
+
+
+// ====================================================
+// CREATE BOOKING
+// ====================================================
+
+exports.createBooking = async (req, res) => {
+    try {
 
         const {
             podId,
             bookingDate,
             startTime,
             endTime
-        } = req.body
+        } = req.body;
 
-        const pod = await Pod.findById(podId)
 
-        if (!pod){
-            return res.status(404).json({
-                message: "Pod Not Found"
-            });
-        }
+        // ---------------------------------------------
+        // Basic validation
+        // ---------------------------------------------
 
-        const start = Number(startTime.split(":")[0]);
-
-        const end = Number(endTime.split(":")[0]);
-
-        if (end<=start){
+        if (
+            !podId ||
+            !bookingDate ||
+            !startTime ||
+            !endTime
+        ) {
             return res.status(400).json({
-                message: "End Time must be greater than start time"
+                success: false,
+                message:
+                    "Pod, booking date, start time and end time are required"
             });
         }
 
-        const duration = end - start;
 
-        const existingBooking = await Booking.findOne({
+        // ---------------------------------------------
+        // Find pod
+        // ---------------------------------------------
+
+        const pod = await Pod.findById(podId);
+
+        if (!pod) {
+            return res.status(404).json({
+                success: false,
+                message: "Pod not found"
+            });
+        }
+
+
+        // ---------------------------------------------
+        // Check pod availability
+        // ---------------------------------------------
+
+        if (pod.status !== "Available") {
+            return res.status(400).json({
+                success: false,
+                message: "This pod is currently unavailable"
+            });
+        }
+
+
+        // ---------------------------------------------
+        // Validate date
+        // ---------------------------------------------
+
+        const selectedDate = new Date(bookingDate);
+
+        if (Number.isNaN(selectedDate.getTime())) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid booking date"
+            });
+        }
+
+
+        // ---------------------------------------------
+        // Prevent booking in the past
+        // ---------------------------------------------
+
+        const today = new Date();
+
+        today.setHours(0, 0, 0, 0);
+
+        const bookingDay = new Date(selectedDate);
+
+        bookingDay.setHours(0, 0, 0, 0);
+
+        if (bookingDay < today) {
+            return res.status(400).json({
+                success: false,
+                message: "You cannot book a pod for a past date"
+            });
+        }
+
+
+        // ---------------------------------------------
+        // Convert times to minutes
+        // ---------------------------------------------
+
+        const requestedStart = timeToMinutes(startTime);
+        const requestedEnd = timeToMinutes(endTime);
+
+
+        if (
+            requestedStart === null ||
+            requestedEnd === null
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid time format. Use HH:MM"
+            });
+        }
+
+
+        // ---------------------------------------------
+        // Validate time range
+        // ---------------------------------------------
+
+        if (requestedEnd <= requestedStart) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "End time must be greater than start time"
+            });
+        }
+
+
+        // ---------------------------------------------
+        // Calculate duration
+        // ---------------------------------------------
+
+        const durationMinutes =
+            requestedEnd - requestedStart;
+
+        const durationHours =
+            durationMinutes / 60;
+
+
+        // ---------------------------------------------
+        // Find existing active bookings
+        // ---------------------------------------------
+
+        const existingBookings = await Booking.find({
             pod: podId,
-            bookingDate: new Date(bookingDate)
+
+            bookingDate: {
+                $gte: new Date(
+                    selectedDate.setHours(0, 0, 0, 0)
+                ),
+
+                $lt: new Date(
+                    new Date(bookingDate).setHours(
+                        24,
+                        0,
+                        0,
+                        0
+                    )
+                )
+            },
+
+            bookingStatus: {
+                $in: [
+                    "Pending",
+                    "Confirmed"
+                ]
+            }
         });
 
-        bookingStatus: {
-            $ne: "Cancelled"
-        }
 
-        if(existingBooking){
-            const bookedStart= Number(existingBooking.startTime.split(":")[0]);
+        // ---------------------------------------------
+        // Check overlap
+        // ---------------------------------------------
 
-            const bookedEnd = Number(existingBooking.endTime.split(":")[0]);
+        for (const existingBooking of existingBookings) {
 
-            const overlap = start < bookedEnd && end > bookedStart
+            const bookedStart =
+                timeToMinutes(
+                    existingBooking.startTime
+                );
 
-            if (overlap){
+            const bookedEnd =
+                timeToMinutes(
+                    existingBooking.endTime
+                );
+
+
+            if (
+                bookedStart !== null &&
+                bookedEnd !== null &&
+                isOverlapping(
+                    requestedStart,
+                    requestedEnd,
+                    bookedStart,
+                    bookedEnd
+                )
+            ) {
+
                 return res.status(409).json({
-                    message: "Pod Already Booked for Selected time"
+                    success: false,
+                    message:
+                        "This pod is already booked for the selected time"
                 });
-
-
             }
         }
-     
-    const subtotal = duration * pod.hourlyPrice;
 
-    const booking = await Booking.create({
-        customer: req.user._id,
-        owner:pod.owner,
 
-        pod:pod._id,
+        // ---------------------------------------------
+        // Calculate subtotal
+        // ---------------------------------------------
 
-        bookingDate,
+        const subtotal =
+            durationHours * pod.hourlyPrice;
 
-        startTime,
 
-        endTime,
+        // ---------------------------------------------
+        // Create booking
+        // ---------------------------------------------
 
-        duration,
+        const booking = await Booking.create({
 
-        hourlyPrice:pod.hourlyPrice,
+            customer: req.user._id,
 
-        subtotal
+            owner: pod.owner,
 
-    });
-        const subTotal = booking.subtotal
-     
-      const gst = calculateGST(subTotal)
+            pod: pod._id,
 
-    const bill = await Bill.create({
+            bookingDate: selectedDate,
 
-    booking: booking._id,
+            startTime,
 
-    customer: booking.customer,
+            endTime,
 
-    owner: booking.owner,
+            duration: durationHours,
 
-    pod: booking.pod,
+            hourlyPrice: pod.hourlyPrice,
 
-    bookingDate: booking.bookingDate,
+            subtotal,
 
-    invoiceNumber: generateInvoice(),
+            bookingStatus: "Pending",
 
-    subtotal: booking.subtotal,
+            paymentStatus: "Pending"
 
-    gstRate: gst.gstRate,
-
-    gstAmount: gst.gstAmount,
-
-    platformFee: gst.platformFee,
-
-    totalAmount: gst.totalAmount,
-
-    paymentStatus: "Pending"
-
-});
-
-    res.status(201).json({
-        sucess:true,
-        booking,
-        bill
-    })
-
-    }catch(error){
-        console.error(error);
-        res.status(500).json({
-            message: error.message
         });
-    }
 
-}
+
+        // ---------------------------------------------
+        // Calculate GST
+        // ---------------------------------------------
+
+        const gst =
+            calculateGST(subtotal);
+
+
+        // ---------------------------------------------
+        // Generate bill
+        // ---------------------------------------------
+
+        const bill = await Bill.create({
+
+            booking: booking._id,
+
+            customer: booking.customer,
+
+            owner: booking.owner,
+
+            pod: booking.pod,
+
+            bookingDate: booking.bookingDate,
+
+            invoiceNumber: generateInvoice(),
+
+            subtotal: booking.subtotal,
+
+            gstRate: gst.gstRate,
+
+            gstAmount: gst.gstAmount,
+
+            platformFee: gst.platformFee,
+
+            totalAmount: gst.totalAmount,
+
+            paymentStatus: "Pending"
+
+        });
+
+
+        // ---------------------------------------------
+        // Response
+        // ---------------------------------------------
+
+        return res.status(201).json({
+
+            success: true,
+
+            message: "Booking created successfully",
+
+            booking,
+
+            bill
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Create Booking Error:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Something went wrong while creating booking",
+
+            error: error.message
+
+        });
+
+    }
+};
+
+
+
+// ====================================================
+// GET CUSTOMER BOOKINGS
+// ====================================================
+
+exports.getMyBookings = async (req, res) => {
+
+    try {
+
+        const bookings = await Booking.find({
+            customer: req.user._id
+        })
+            .populate(
+                "pod",
+                "podName location city state hourlyPrice images"
+            )
+            .populate(
+                "owner",
+                "name email"
+            )
+            .sort({
+                createdAt: -1
+            });
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            count: bookings.length,
+
+            bookings
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Get My Bookings Error:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Unable to fetch your bookings",
+
+            error: error.message
+
+        });
+
+    }
+};
+
+
+
+// ====================================================
+// GET SINGLE BOOKING
+// ====================================================
+
+exports.getBookingById = async (req, res) => {
+
+    try {
+
+        const booking =
+            await Booking.findById(
+                req.params.id
+            )
+                .populate(
+                    "pod",
+                    "podName location city state hourlyPrice images"
+                )
+                .populate(
+                    "owner",
+                    "name email"
+                )
+                .populate(
+                    "customer",
+                    "name email"
+                );
+
+
+        if (!booking) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Booking not found"
+
+            });
+
+        }
+
+
+        // ---------------------------------------------
+        // Security check
+        // ---------------------------------------------
+
+        const isCustomer =
+            booking.customer._id.toString() ===
+            req.user._id.toString();
+
+        const isOwner =
+            booking.owner._id.toString() ===
+            req.user._id.toString();
+
+        const isAdmin =
+            req.user.role === "admin";
+
+
+        if (
+            !isCustomer &&
+            !isOwner &&
+            !isAdmin
+        ) {
+
+            return res.status(403).json({
+
+                success: false,
+
+                message:
+                    "You are not authorized to view this booking"
+
+            });
+
+        }
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            booking
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Get Booking Error:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Unable to fetch booking",
+
+            error: error.message
+
+        });
+
+    }
+};
+
+
+
+// ====================================================
+// CANCEL BOOKING
+// ====================================================
+
+exports.cancelBooking = async (req, res) => {
+
+    try {
+
+        const booking =
+            await Booking.findById(
+                req.params.id
+            );
+
+
+        if (!booking) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Booking not found"
+
+            });
+
+        }
+
+
+        // ---------------------------------------------
+        // Only customer / owner / admin
+        // ---------------------------------------------
+
+        const isCustomer =
+            booking.customer.toString() ===
+            req.user._id.toString();
+
+        const isOwner =
+            booking.owner.toString() ===
+            req.user._id.toString();
+
+        const isAdmin =
+            req.user.role === "admin";
+
+
+        if (
+            !isCustomer &&
+            !isOwner &&
+            !isAdmin
+        ) {
+
+            return res.status(403).json({
+
+                success: false,
+
+                message:
+                    "You are not authorized to cancel this booking"
+
+            });
+
+        }
+
+
+        // ---------------------------------------------
+        // Already cancelled
+        // ---------------------------------------------
+
+        if (
+            booking.bookingStatus ===
+            "Cancelled"
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Booking is already cancelled"
+
+            });
+
+        }
+
+
+        // ---------------------------------------------
+        // Completed booking cannot be cancelled
+        // ---------------------------------------------
+
+        if (
+            booking.bookingStatus ===
+            "Completed"
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Completed bookings cannot be cancelled"
+
+            });
+
+        }
+
+
+        booking.bookingStatus =
+            "Cancelled";
+
+
+        // Payment will be handled in Batch 6
+        // For now keep payment status unchanged.
+
+        await booking.save();
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            message:
+                "Booking cancelled successfully",
+
+            booking
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Cancel Booking Error:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Unable to cancel booking",
+
+            error: error.message
+
+        });
+
+    }
+};
