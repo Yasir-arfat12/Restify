@@ -1,30 +1,43 @@
-// context/SearchContext.jsx
-import React, { createContext, useState, useContext } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState
+} from "react";
 
-const SearchContext = createContext();
+const SearchContext = createContext(null);
+
+const initialSearchCriteria = {
+  state: "",
+  city: "",
+  date: "",
+  time: ""
+};
 
 export function SearchProvider({ children }) {
-  // Backend-friendly state structure initialization
-  const [searchCriteria, setSearchCriteria] = useState({
-    state: '',
-    city: '',
-    date: '',
-    time: ''
-  });
-// const [searchCriteria, setSearchCriteria] = useState({
-//   state: 'California',
-//   city: 'Los Angeles',
-//   date: '2026-05-20',
-//   time: '14:00'
-// });
+  const [searchCriteria, setSearchCriteria] = useState(
+    initialSearchCriteria
+  );
 
-  // Helper function to clear search after booking completion
+  const updateSearchCriteria = (newCriteria) => {
+    setSearchCriteria((previousCriteria) => ({
+      ...previousCriteria,
+      ...newCriteria
+    }));
+  };
+
   const clearSearch = () => {
-    setSearchCriteria({ state: '', city: '', date: '', time: '' });
+    setSearchCriteria(initialSearchCriteria);
   };
 
   return (
-    <SearchContext.Provider value={{ searchCriteria, setSearchCriteria, clearSearch }}>
+    <SearchContext.Provider
+      value={{
+        searchCriteria,
+        setSearchCriteria,
+        updateSearchCriteria,
+        clearSearch
+      }}
+    >
       {children}
     </SearchContext.Provider>
   );
@@ -32,8 +45,12 @@ export function SearchProvider({ children }) {
 
 export function useSearch() {
   const context = useContext(SearchContext);
+
   if (!context) {
-    throw new Error('useSearch must be used within a SearchProvider');
+    throw new Error(
+      "useSearch must be used inside SearchProvider"
+    );
   }
+
   return context;
 }

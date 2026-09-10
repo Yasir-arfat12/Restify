@@ -1,14 +1,13 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { IoLogoInstagram } from 'react-icons/io';
 import { RiTwitterXLine } from 'react-icons/ri';
 import { FiPhoneCall, FiMail } from 'react-icons/fi';
 import { BRAND } from '../../constants/theme';
 import Button from '../ui/Button';
-
+import { Link, useNavigate } from "react-router-dom";
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-
+  const navigate = useNavigate();
   return (
     <footer className="mt-auto border-t border-white/8 bg-surface-950/90">
       {/* CTA band */}
@@ -22,9 +21,14 @@ const Footer = () => {
               List your pods and reach thousands of travelers seeking premium rest.
             </p>
           </div>
-          <Button variant="primary" size="lg" className="shrink-0">
-            Become a Partner
-          </Button>
+         <Button
+            variant="primary"
+              size="lg"
+            className="shrink-0"
+            onClick={() => navigate("/partner/apply")}
+>
+  Become a Partner
+</Button>
         </div>
       </div>
 

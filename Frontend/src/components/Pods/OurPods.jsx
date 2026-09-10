@@ -144,276 +144,222 @@
 // export default OurPods
 
 import React, { useEffect, useState } from "react";
-
+import { Link } from "react-router-dom";
 import {
-    MapPin,
-    Users,
-    Wifi,
-    LoaderCircle,
-    ArrowRight
+  MapPin,
+  Star,
+  Wifi,
+  Snowflake,
+  Lock,
+  Clock,
+  LoaderCircle
 } from "lucide-react";
 
 import API from "../../api/axios";
 
 const OurPods = () => {
+  const [pods, setPods] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-    const [pods, setPods] = useState([]);
+  useEffect(() => {
+    const fetchPods = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-    const [loading, setLoading] = useState(true);
+        const response = await API.get("/pods");
 
-    const [error, setError] = useState("");
+        const receivedPods = Array.isArray(response.data)
+          ? response.data
+          : response.data?.pods || [];
 
-    useEffect(() => {
+        setPods(receivedPods);
+      } catch (error) {
+        console.error("Unable to fetch pods:", error);
 
-        const fetchPods = async () => {
+        setError(
+          error.response?.data?.message ||
+            "Unable to load pods. Please try again later."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
 
-            try {
+    fetchPods();
+  }, []);
 
-                setLoading(true);
+  const getPodId = (pod) => {
+    return pod._id || pod.id;
+  };
 
-                const response =
-                    await API.get("/pods");
+  const getPodName = (pod) => {
+    return pod.podName || pod.name || "Restify Pod";
+  };
 
-                setPods(response.data);
+  const getPodLocation = (pod) => {
+    return (
+      pod.location ||
+      [pod.city, pod.state].filter(Boolean).join(", ") ||
+      "Location unavailable"
+    );
+  };
 
-            } catch (error) {
+  const getPodPrice = (pod) => {
+    return (
+      pod.hourlyPrice ||
+      pod.price ||
+      pod.pricing?.hourly ||
+      "Contact for price"
+    );
+  };
 
-                console.error(error);
-
-                setError(
-                    error.response?.data?.message ||
-                    "Unable to load pods."
-                );
-
-            } finally {
-
-                setLoading(false);
-
-            }
-        };
-
-        fetchPods();
-
-    }, []);
+  const getPodImage = (pod) => {
+    if (Array.isArray(pod.images) && pod.images.length > 0) {
+      return pod.images[0];
+    }
 
     return (
+      pod.image ||
+      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1200&auto=format&fit=crop"
+    );
+  };
 
-        <section className="min-h-screen bg-gradient-to-r from-[#030912] via-[#0b1e3c] to-[#09101b] px-4 py-12 sm:px-6 lg:px-8">
+  return (
+    <section className="min-h-screen bg-surface-900 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-brand-400">
+            Restify Pods
+          </p>
 
-            <div className="mx-auto max-w-7xl">
+          <h1 className="mt-4 font-display text-4xl font-bold text-white sm:text-5xl">
+            Recharge Anytime. Rest in Comfort.
+          </h1>
 
-                <div className="mx-auto mb-12 max-w-3xl text-center">
+          <p className="mt-5 text-base leading-8 text-slate-400">
+            Discover comfortable and private sleeping pods designed
+            for travellers who need a peaceful place to relax,
+            refresh, and recharge.
+          </p>
+        </div>
 
-                    <h1 className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
-                        Our Pods
-                    </h1>
+        {loading && (
+          <div className="flex items-center justify-center py-24">
+            <div className="flex items-center gap-3 text-slate-300">
+              <LoaderCircle className="animate-spin" size={24} />
+              <span>Loading pods...</span>
+            </div>
+          </div>
+        )}
 
-                    <p className="mt-4 text-sm leading-6 text-slate-400 sm:text-base">
-                        Private, comfortable and affordable
-                        sleeping pods available whenever
-                        you need to rest.
+        {!loading && error && (
+          <div className="mx-auto mt-12 max-w-xl rounded-2xl border border-red-400/20 bg-red-400/10 p-6 text-center text-red-300">
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && pods.length === 0 && (
+          <div className="mx-auto mt-12 max-w-xl rounded-2xl border border-white/10 bg-surface-800 p-8 text-center">
+            <h2 className="text-xl font-semibold text-white">
+              No pods available
+            </h2>
+
+            <p className="mt-2 text-slate-400">
+              New pods will appear here once they are added.
+            </p>
+          </div>
+        )}
+
+        {!loading && !error && pods.length > 0 && (
+          <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {pods.map((pod) => {
+              const podId = getPodId(pod);
+
+              return (
+                <article
+                  key={podId}
+                  className="overflow-hidden rounded-3xl border border-white/10 bg-surface-800 shadow-xl"
+                >
+                  <div className="relative h-64 overflow-hidden">
+                    <img
+                      src={getPodImage(pod)}
+                      alt={getPodName(pod)}
+                      className="h-full w-full object-cover transition duration-500 hover:scale-105"
+                    />
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+
+                    <div className="absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-black/50 px-3 py-1.5 text-sm text-white backdrop-blur">
+                      <MapPin size={15} />
+                      {getPodLocation(pod)}
+                    </div>
+                  </div>
+
+                  <div className="space-y-5 p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <h2 className="text-xl font-semibold text-white">
+                        {getPodName(pod)}
+                      </h2>
+
+                      {pod.rating && (
+                        <div className="flex shrink-0 items-center gap-1 text-sm text-yellow-400">
+                          <Star size={15} fill="currentColor" />
+                          {pod.rating}
+                        </div>
+                      )}
+                    </div>
+
+                    <p className="line-clamp-3 text-sm leading-6 text-slate-400">
+                      {pod.description ||
+                        "A comfortable and private space for your short stay."}
                     </p>
 
-                </div>
-
-
-                {/* Loading */}
-
-                {loading && (
-
-                    <div className="flex min-h-[300px] items-center justify-center">
-
-                        <div className="text-center">
-
-                            <LoaderCircle className="mx-auto h-10 w-10 animate-spin text-blue-400" />
-
-                            <p className="mt-4 text-slate-400">
-                                Loading pods...
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                )}
-
-
-                {/* Error */}
-
-                {!loading && error && (
-
-                    <div className="mx-auto max-w-xl rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-center text-red-400">
-                        {error}
-                    </div>
-
-                )}
-
-
-                {/* Empty */}
-
-                {!loading &&
-                    !error &&
-                    pods.length === 0 && (
-
-                        <div className="rounded-3xl border border-slate-800 bg-slate-900 p-10 text-center">
-
-                            <h2 className="text-xl font-semibold text-white">
-                                No pods available
-                            </h2>
-
-                            <p className="mt-2 text-slate-500">
-                                New pods will appear here once
-                                an owner or admin creates them.
-                            </p>
-
-                        </div>
-
-                    )}
-
-
-                {/* POD GRID */}
-
-                {!loading &&
-                    !error &&
-                    pods.length > 0 && (
-
-                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-
-                            {pods.map((pod) => (
-
-                                <PodCard
-                                    key={pod._id}
-                                    pod={pod}
-                                />
-
-                            ))}
-
-                        </div>
-
-                    )}
-
-            </div>
-
-        </section>
-    );
-};
-
-
-const PodCard = ({ pod }) => {
-
-    const image =
-        pod.images?.[0] ||
-        "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop";
-
-    return (
-
-        <article className="group overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-xl transition duration-300 hover:-translate-y-1 hover:border-blue-500/40">
-
-            {/* IMAGE */}
-
-            <div className="relative h-56 overflow-hidden">
-
-                <img
-                    src={image}
-                    alt={pod.podName}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                />
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-
-                <div className="absolute left-4 top-4 rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-semibold text-white">
-                    {pod.status || "Available"}
-                </div>
-
-                <div className="absolute bottom-4 left-4">
-
-                    <h2 className="text-xl font-bold text-white">
-                        {pod.podName}
-                    </h2>
-
-                </div>
-
-            </div>
-
-
-            {/* CONTENT */}
-
-            <div className="p-5">
-
-                <div className="flex items-start gap-2 text-sm text-slate-400">
-
-                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" />
-
-                    <span>
-                        {pod.location}
-                    </span>
-
-                </div>
-
-                <div className="mt-2 text-sm text-slate-500">
-                    {pod.city}, {pod.state}
-                </div>
-
-
-                <p className="mt-4 line-clamp-2 text-sm leading-6 text-slate-400">
-                    {pod.description}
-                </p>
-
-
-                <div className="mt-5 flex items-center justify-between border-t border-slate-800 pt-5">
-
-                    <div>
-
-                        <p className="text-xs text-slate-500">
-                            Starting from
-                        </p>
-
-                        <p className="text-xl font-bold text-white">
-                            ₹{pod.hourlyPrice}
-                            <span className="text-sm font-normal text-slate-500">
-                                /hour
+                    {Array.isArray(pod.amenities) &&
+                      pod.amenities.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {pod.amenities.slice(0, 5).map((amenity) => (
+                            <span
+                              key={amenity}
+                              className="rounded-full bg-surface-700 px-3 py-1 text-xs text-slate-300"
+                            >
+                              {amenity}
                             </span>
+                          ))}
+                        </div>
+                      )}
+
+                    <div className="flex items-center justify-between border-t border-white/10 pt-5">
+                      <div>
+                        <p className="text-xs text-slate-500">
+                          Starting from
                         </p>
 
+                        <p className="mt-1 text-lg font-bold text-brand-400">
+                          ₹{getPodPrice(pod)}
+                          <span className="text-xs font-normal text-slate-500">
+                            /hour
+                          </span>
+                        </p>
+                      </div>
+
+                      <Link
+                        to={`/searchpods?podId=${podId}`}
+                        className="rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-400"
+                      >
+                        View Pod
+                      </Link>
                     </div>
-
-
-                    <div className="flex items-center gap-1 text-sm text-slate-400">
-
-                        <Users className="h-4 w-4" />
-
-                        {pod.capacity}
-
-                    </div>
-
-                </div>
-
-
-                {pod.amenities?.length > 0 && (
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-
-                        {pod.amenities
-                            .slice(0, 3)
-                            .map((amenity) => (
-
-                                <span
-                                    key={amenity}
-                                    className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300"
-                                >
-                                    {amenity}
-                                </span>
-
-                            ))}
-
-                    </div>
-
-                )}
-
-            </div>
-
-        </article>
-    );
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </section>
+  );
 };
 
 export default OurPods;

@@ -1,65 +1,152 @@
-import React from "react"
-import {BrowserRouter, Route,Routes} from "react-router-dom";
+
+import React from "react";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+} from "react-router-dom";
+
 import { SearchProvider } from "./context/SearchContext";
+import { AuthProvider, useAuth } from "./context/authContext";
+
+import PartnerApply from "./components/pages/PartnerApply";
 import UserLayout from "./components/Layout/UserLayout";
+
 import ProfileUser from "./components/pages/ProfileUser";
 import Home from "./components/pages/Home";
 import AboutUs from "./components/pages/AboutUs";
 import OurPods from "./components/Pods/OurPods";
-import SearchPods from "./components/Pods/SearchPods";
-import ProfileLogIn from "./components/pages/ProfileLogIn"
+
+import ProfileLogIn from "./components/pages/ProfileLogIn";
 import Login from "./components/pages/Login";
 import Register from "./components/pages/Register";
-import RoleRoute from "./components/Layout/RoleRoute";
 import OwnerDashboard from "./components/pages/OwnerDashboard";
 import AdminDashboard from "./components/pages/AdminDashboard";
+import PodManagement from "./components/Pods/PodManagement";
+import SearchPods from "./components/Pods/SearchPods";
+/*
+  Protects routes that require a logged-in user.
+*/
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+
+/*
+  Protects routes according to the user's role.
+*/
+const RoleRoute = ({ allowedRoles, children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
 function App() {
   return (
-    <SearchProvider>
-   <BrowserRouter>
-    <Routes>
-     <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />  
-      <Route path="/" element={<UserLayout/>}>
-       <Route index element={<Home/>}/>
-      <Route path="about" element={<AboutUs/>}/> 
-        <Route path="pods" element={<OurPods/>}/>
-        <Route path="searchpods" element={<SearchPods/>}/> 
-        <Route path="profile" element={<ProfileLogIn/>}/>
-        <Route path="profileUser" element={<ProfileUser/>}/> 
-         <Route element={
-                        <RoleRoute
-                            allowedRoles={["owner"]}
-                        />
-                    }>
+    <AuthProvider>
+      <SearchProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public authentication routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-                        <Route
-                            path="/owner/dashboard"
-                            element={<OwnerDashboard />}
-                        />
+            {/* Public application routes */}
+            <Route path="/" element={<UserLayout />}>
+              <Route index element={<Home />} />
 
-                    </Route>
+              <Route path="about" element={<AboutUs />} />
+              <Route path="pods" element={<OurPods />} />
+              <Route path="searchpods" element={<SearchPods />} />
+              <Route path="profile" element={<ProfileLogIn />} />
 
+              {/* Customer-only route */}
+              <Route
+                path="profileUser"
+                element={
+                  <RoleRoute allowedRoles={["customer"]}>
+                    <ProfileUser />
+                  </RoleRoute>
+                }
+              />
 
-                    {/* ADMIN */}
+              {/* Owner and admin route for pod management */}
+              <Route
+                path="pod-management"
+                element={
+                  <RoleRoute allowedRoles={["owner", "admin"]}>
+                    <PodManagement />
+                  </RoleRoute>
+                }
+              />
 
-                    <Route element={
-                        <RoleRoute
-                            allowedRoles={["admin"]}
-                        />
-                    }>
+              {/* Owner-only route */}
+              <Route
+                path="owner/dashboard"
+                element={
+                  <RoleRoute allowedRoles={["owner"]}>
+                    <OwnerDashboard />
+                  </RoleRoute>
+                }
+              />
 
-                        <Route
-                            path="/admin/dashboard"
-                            element={<AdminDashboard />}
-                        />
+              {/* Admin-only route */}
+              <Route
+                path="admin/dashboard"
+                element={
+                  <RoleRoute allowedRoles={["admin"]}>
+                    <AdminDashboard />
+                  </RoleRoute>
+                }
+              />
+            </Route>
 
-                    </Route>  
-      </Route>    
-    </Routes>
-   </BrowserRouter>
-   </SearchProvider>
-  )
+            {/* Partner application route */}
+            <Route
+              path="/partner/apply"
+              element={<PartnerApply />}
+            />
+
+            {/* Unknown routes */}
+            <Route
+              path="*"
+              element={<Navigate to="/" replace />}
+            />
+          </Routes>
+        </BrowserRouter>
+      </SearchProvider>
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;

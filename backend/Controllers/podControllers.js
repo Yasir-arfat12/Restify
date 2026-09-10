@@ -187,7 +187,7 @@ exports.searchPods = async (req,res)=> {
                 filter.hourlyPrice.$gte=Number(minPrice)
             }
             if (maxPrice){
-                filter.hourlyPrice.$gte=Number(maxPrice)
+                filter.hourlyPrice.$lte=Number(maxPrice)
             }
         }
 

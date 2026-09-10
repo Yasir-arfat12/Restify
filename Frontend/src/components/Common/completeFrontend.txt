@@ -1,0 +1,4612 @@
+Frontend --> 
+A. api: 
+1. axios.js
+import axios from "axios";
+
+const API = axios.create({
+    baseURL: import.meta.env.VITE_API_URL,
+    headers: {
+        "Content-Type": "application/json"
+    }
+});
+
+API.interceptors.request.use(
+    (config) => {
+
+        const token = localStorage.getItem("token");
+
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+
+        return config;
+    },
+
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
+export default API;
+
+B. Components --> 
+1.Comman: 
+a:Footer.jsx
+
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { IoLogoInstagram } from 'react-icons/io';
+import { RiTwitterXLine } from 'react-icons/ri';
+import { FiPhoneCall, FiMail } from 'react-icons/fi';
+import { BRAND } from '../../constants/theme';
+import Button from '../ui/Button';
+
+const Footer = () => {
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <footer className="mt-auto border-t border-white/8 bg-surface-950/90">
+      {/* CTA band */}
+      <div className="border-b border-white/8 bg-gradient-to-r from-brand-600/10 via-transparent to-brand-600/10">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 py-10 sm:flex-row sm:px-6 lg:px-8">
+          <div className="text-center sm:text-left">
+            <h2 className="font-display text-xl text-white sm:text-2xl">
+              Add Your Properties & Grow with Restify
+            </h2>
+            <p className="mt-2 text-sm text-slate-400">
+              List your pods and reach thousands of travelers seeking premium rest.
+            </p>
+          </div>
+          <Button variant="primary" size="lg" className="shrink-0">
+            Become a Partner
+          </Button>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Brand */}
+          <div className="space-y-4">
+            <Link to="/" className="font-display text-2xl font-bold text-white">
+              <span className="text-brand-400">R</span>ESTIFY
+            </Link>
+            <p className="text-sm leading-relaxed text-slate-400">
+              {BRAND.tagline.split('. ').map((part, i) => (
+                <span key={i}>
+                  {i > 0 && '. '}
+                  <span className="text-brand-400">{part.charAt(0)}</span>
+                  {part.slice(1)}
+                </span>
+              ))}
+            </p>
+          </div>
+
+          {/* Explore */}
+          <div>
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">
+              Explore
+            </h3>
+            <ul className="space-y-2.5">
+              {[
+                { to: '/', label: 'Home' },
+                { to: '/pods', label: 'Our Pods' },
+                { to: '/searchpods', label: 'Find Pods' },
+                { to: '/about', label: 'About Us' },
+              ].map(({ to, label }) => (
+                <li key={to}>
+                  <Link
+                    to={to}
+                    className="text-sm text-slate-400 transition-colors hover:text-brand-400"
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">
+              Company
+            </h3>
+            <ul className="space-y-2.5 text-sm text-slate-400">
+              <li>
+                <a href="#" className="transition-colors hover:text-brand-400">
+                  Privacy Policy
+                </a>
+              </li>
+              <li>
+                <a href="#" className="transition-colors hover:text-brand-400">
+                  Terms of Service
+                </a>
+              </li>
+              <li>
+                <a href="#" className="transition-colors hover:text-brand-400">
+                  Cancellation Policy
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">
+              Contact
+            </h3>
+            <ul className="space-y-3">
+              <li>
+                <a
+                  href={`tel:${BRAND.phone.replace(/\s/g, '')}`}
+                  className="flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-brand-400"
+                >
+                  <FiPhoneCall className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {BRAND.phone}
+                </a>
+              </li>
+              <li>
+                <a
+                  href="mailto:arfatandewal5@gmail.com"
+                  className="flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-brand-400"
+                >
+                  <FiMail className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  arfatandewal5@gmail.com
+                </a>
+              </li>
+            </ul>
+            <div className="mt-5 flex gap-3">
+              {[
+                { Icon: IoLogoInstagram, label: 'Instagram' },
+                { Icon: RiTwitterXLine, label: 'Twitter' },
+              ].map(({ Icon, label }) => (
+                <a
+                  key={label}
+                  href="#"
+                  aria-label={label}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-400 transition-all hover:border-brand-400/30 hover:text-brand-400"
+                >
+                  <Icon className="h-5 w-5" />
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/8 pt-8 sm:flex-row">
+          <p className="text-xs text-slate-500">
+            © {currentYear} Restify. All rights reserved.
+          </p>
+          <p className="text-xs text-slate-500">
+            Premium sleep pods · Hourly stays from ₹{BRAND.startingPrice}/hr
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
+
+b:Header.jsx
+
+import React from 'react';
+import Navbar from '../Common/Navbar';
+
+const Header = () => {
+  return <Navbar />;
+};
+
+export default Header;
+
+
+c:Navbar.jsx
+
+import React, { useState, useEffect } from 'react';
+import { Link, NavLink } from 'react-router-dom';
+import { HiOutlineShoppingBag, HiBars3BottomRight } from 'react-icons/hi2';
+import { FaUser } from 'react-icons/fa';
+import { IoMdClose } from 'react-icons/io';
+import { Search } from 'lucide-react';
+import CartDrawer from '../Layout/CartDrawer';
+import { cn } from '../../utils/cn';
+import Button from '../ui/Button';
+
+const NAV_LINKS = [
+  { to: '/', label: 'Home', end: true },
+  { to: '/about', label: 'About' },
+  { to: '/pods', label: 'Pods' },
+  { to: '/profile', label: 'Profile' },
+];
+
+const Navbar = () => {
+  const [openDrawer, setOpenDrawer] = useState(false);
+  const [navDrawer, setNavDrawer] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = navDrawer ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [navDrawer]);
+
+  const toggleNavDrawer = () => setNavDrawer((v) => !v);
+  const toggleCartDrawer = () => setOpenDrawer((v) => !v);
+
+  const navLinkClass = ({ isActive }) =>
+    cn(
+      'relative text-sm font-medium transition-colors duration-200',
+      isActive ? 'text-brand-400' : 'text-slate-300 hover:text-white'
+    );
+
+  return (
+    <>
+      <header
+        className={cn(
+          'sticky top-0 z-50 w-full transition-all duration-300',
+          scrolled ? 'glass shadow-lg shadow-black/20' : 'bg-transparent'
+        )}
+      >
+        <nav
+          className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8"
+          aria-label="Main navigation"
+        >
+          {/* Left: menu + logo */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleNavDrawer}
+              className="rounded-lg p-2 text-white transition-colors hover:bg-white/10 lg:hidden"
+              aria-label="Open menu"
+              aria-expanded={navDrawer}
+            >
+              <HiBars3BottomRight className="h-6 w-6" />
+            </button>
+            <Link
+              to="/"
+              className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl"
+            >
+              <span className="text-brand-400">R</span>estify
+            </Link>
+          </div>
+
+          {/* Center: desktop nav */}
+          <div className="hidden items-center gap-8 lg:flex">
+            {NAV_LINKS.map((link) => (
+              <NavLink key={link.to} to={link.to} end={link.end} className={navLinkClass}>
+                {link.label}
+              </NavLink>
+            ))}
+          </div>
+
+          {/* Right: search + actions */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="relative hidden md:block">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                placeholder="Search pods..."
+                aria-label="Search pods"
+                className="h-10 w-36 rounded-xl border border-white/10 bg-white/5 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 transition-all focus:w-44 focus:border-brand-400/40 focus:outline-none focus:ring-2 focus:ring-brand-400/20 lg:w-44 lg:focus:w-52"
+              />
+            </div>
+            <Link
+              to="/login"
+              className="hidden rounded-xl p-2.5 text-slate-300 transition-colors hover:bg-white/10 hover:text-white sm:block"
+              aria-label="Login"
+            >
+              <FaUser className="h-4 w-4" />
+            </Link>
+            <Link
+              to="/profileUser"
+              className="rounded-xl p-2.5 text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
+              aria-label="Profile and bookings"
+            >
+              <HiOutlineShoppingBag className="h-5 w-5" />
+            </Link>
+            <Link to="/searchpods" className="hidden sm:block">
+              <Button size="sm" variant="primary">
+                Book Now
+              </Button>
+            </Link>
+          </div>
+        </nav>
+      </header>
+
+      <CartDrawer openDrawer={openDrawer} toggleCartDrawer={toggleCartDrawer} />
+
+      {/* Mobile drawer overlay */}
+      {navDrawer && (
+        <button
+          type="button"
+          className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={toggleNavDrawer}
+          aria-label="Close menu overlay"
+        />
+      )}
+
+      {/* Mobile drawer */}
+      <aside
+        className={cn(
+          'fixed left-0 top-0 z-[70] flex h-full w-[min(85vw,320px)] flex-col glass shadow-2xl transition-transform duration-300 ease-out lg:hidden',
+          navDrawer ? 'translate-x-0' : '-translate-x-full'
+        )}
+        aria-hidden={!navDrawer}
+      >
+        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+          <span className="font-display text-xl text-white">
+            <span className="text-brand-400">R</span>estify
+          </span>
+          <button
+            type="button"
+            onClick={toggleNavDrawer}
+            className="rounded-lg p-2 text-white hover:bg-white/10"
+            aria-label="Close menu"
+          >
+            <IoMdClose className="h-6 w-6" />
+          </button>
+        </div>
+        <nav className="flex flex-1 flex-col gap-1 p-4" aria-label="Mobile navigation">
+          {NAV_LINKS.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              end={link.end}
+              onClick={toggleNavDrawer}
+              className={({ isActive }) =>
+                cn(
+                  'rounded-xl px-4 py-3 text-base font-medium transition-colors',
+                  isActive
+                    ? 'bg-brand-500/15 text-brand-400'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                )
+              }
+            >
+              {link.label}
+            </NavLink>
+          ))}
+          <Link
+            to="/login"
+            onClick={toggleNavDrawer}
+            className="mt-4 rounded-xl px-4 py-3 text-base font-medium text-slate-300 hover:bg-white/5"
+          >
+            Login / Register
+          </Link>
+          <Link to="/searchpods" onClick={toggleNavDrawer} className="mt-2">
+            <Button variant="primary" size="md" className="w-full">
+              Book a Pod
+            </Button>
+          </Link>
+        </nav>
+      </aside>
+    </>
+  );
+};
+
+export default Navbar;
+
+2. Layout-->
+a:AuthLayout.jsx:
+
+import React from 'react';
+
+const AuthLayout = ({ children, title, subtitle, isLogin, illustrationText }) => {
+  return (
+    <div className="flex min-h-screen text-slate-100 bg-black selection:text-white">
+         {/* bg-slate-50 text-slate-800  antialiased selection:bg-indigo-500  */}
+      {/* Left Column: Modern Gradient Visual (Hidden on Mobile) */}
+      <div className="relative hidden w-1/2 items-center justify-center bg-gradient-to-r from-[#030912] via-[#0b1e3c] to-[#0d1b31] p-12 lg:flex">
+        <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
+        <div className="relative z-10 max-w-md text-center text-white">
+          <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
+            {title}
+          </h2>
+          <p className="mt-4 text-lg text-indigo-100">
+            {illustrationText}
+          </p>
+          <div className="mt-8 flex justify-center gap-3 opacity-80">
+            <span className="h-2 w-12 rounded-full bg-white/40"></span>
+            <span className={`h-2 w-4 rounded-full transition-all duration-300 ${isLogin ? 'bg-white' : 'bg-white/40'}`}></span>
+            <span className={`h-2 w-4 rounded-full transition-all duration-300 ${!isLogin ? 'bg-white' : 'bg-white/40'}`}></span>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Column: Form Container */}
+      <div className="flex w-full flex-col justify-center px-6 py-12 sm:px-16 lg:w-1/2 lg:px-20 xl:px-24">
+        <div className="mx-auto w-full max-w-md">
+          
+          {/* Brand Logo */}
+          <div className="flex items-center gap-2 mb-8">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-black font-bold text-xl shadow-md shadow-indigo-200">
+              R
+            </div>
+            <span className="text-xl font-bold tracking-tight text-white"> 
+                <span className='text-blue-400 font-bold '>R</span>estify</span>
+          </div>
+
+          {/* Header titles */}
+          <h2 className="text-3xl font-bold tracking-tight text-white">{subtitle}</h2>
+          
+          {/* Main Form content wrapper */}
+          {children}
+
+          {/* Social Sign-In Divider */}
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-slate-50 px-2 text-slate-900">Or continue with</span>
+              </div>
+            </div>
+
+            {/* Social Buttons */}
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              <button type="button" className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 transition-colors">
+                <svg className="h-5 w-5" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Google
+              </button>
+              <button type="button" className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 transition-colors">
+                <svg className="h-5 w-5 text-slate-900" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C17.137 18.193 20 14.436 20 10.017 20 4.484 15.522 0 10 0z" clipRule="evenodd" />
+                </svg>
+                GitHub
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AuthLayout;
+
+
+b:cartDrawer.jsx:
+
+import React from 'react';
+
+const CartDrawer = ({ openDrawer, toggleCartDrawer }) => {
+  if (!openDrawer) return null;
+
+  return (
+    <div className="fixed inset-0 z-[80]" role="dialog" aria-modal="true" aria-label="Cart">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={toggleCartDrawer}
+        aria-label="Close cart"
+      />
+      <aside className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col glass shadow-2xl animate-fade-in">
+        <div className="border-b border-white/10 px-5 py-4">
+          <h2 className="text-lg font-semibold text-white">Your Bookings</h2>
+          <p className="text-sm text-slate-400">Cart drawer — coming soon</p>
+        </div>
+        <div className="flex flex-1 items-center justify-center p-6 text-sm text-slate-500">
+          No items yet
+        </div>
+      </aside>
+    </div>
+  );
+};
+
+export default CartDrawer;
+
+
+c.Hero.jsx:
+
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { MapPin, Calendar, Clock, ArrowRight, Sparkles } from 'lucide-react';
+import { useSearch } from '../../context/SearchContext';
+import { BRAND } from '../../constants/theme';
+import Button from '../ui/Button';
+import Input from '../ui/Input';
+import Card from '../ui/Card';
+
+const HERO_IMAGE =
+  'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=1200&auto=format&fit=crop';
+
+const Hero = () => {
+  const navigate = useNavigate();
+  const { setSearchCriteria } = useSearch();
+
+  const [stateName, setStateName] = useState('');
+  const [cityName, setCityName] = useState('');
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+  const [errors, setErrors] = useState({});
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+
+    const nextErrors = {};
+    if (!stateName.trim()) nextErrors.state = 'State is required';
+    if (!cityName.trim()) nextErrors.city = 'City is required';
+    if (!date) nextErrors.date = 'Date is required';
+    if (!time) nextErrors.time = 'Time is required';
+
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors);
+      return;
+    }
+
+    setErrors({});
+    setSearchCriteria({
+      state: stateName.trim().toLowerCase(),
+      city: cityName.trim().toLowerCase(),
+      date,
+      time,
+    });
+
+    navigate('/searchpods');
+  };
+
+  return (
+    <section className="relative min-h-[calc(100vh-8rem)] overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-surface-900 via-surface-800 to-surface-700" />
+      <div
+        className="absolute inset-0 opacity-30"
+        style={{
+          backgroundImage: `radial-gradient(circle at 20% 50%, rgba(59,130,246,0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(16,185,129,0.1) 0%, transparent 40%)`,
+        }}
+      />
+      <div className="absolute -right-20 top-20 hidden h-[500px] w-[500px] rounded-full bg-brand-500/10 blur-3xl xl:block" />
+
+      <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+          {/* Copy */}
+          <div className="animate-fade-in-up space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand-400/25 bg-brand-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-400">
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+              Premium Sleep Pods
+            </div>
+            <h1 className="font-display text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-5xl xl:text-[3.25rem]">
+              Rest in luxury.
+              <br />
+              <span className="bg-gradient-to-r from-brand-400 to-emerald-400 bg-clip-text text-transparent">
+                From ₹{BRAND.startingPrice}/hr
+              </span>
+            </h1>
+            <p className="max-w-lg text-base leading-relaxed text-slate-400 sm:text-lg">
+              Private, climate-controlled sleeping pods designed for travelers,
+              professionals, and anyone who needs quality rest — without hotel prices.
+            </p>
+            <div className="flex flex-wrap gap-4 text-sm text-slate-400">
+              {['Hourly booking', '24/7 access', 'Secure lockers'].map((item) => (
+                <span key={item} className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Hero image — desktop */}
+          <div className="relative hidden animate-fade-in animate-stagger-2 lg:block">
+            <div className="absolute -inset-4 rounded-3xl bg-gradient-to-tr from-brand-500/20 to-emerald-500/10 blur-2xl" />
+            <img
+              src={HERO_IMAGE}
+              alt="Luxury sleep pod interior"
+              className="relative aspect-[4/5] w-full rounded-3xl object-cover shadow-2xl ring-1 ring-white/10"
+              loading="eager"
+            />
+          </div>
+        </div>
+
+        {/* Search card — Airbnb-style */}
+        <form
+          onSubmit={handleSearchSubmit}
+          className="animate-fade-in-up animate-stagger-3 mt-10 sm:mt-14"
+          aria-label="Search for sleep pods"
+        >
+          <Card variant="default" className="!p-0 overflow-hidden">
+            <div className="border-b border-white/10 px-5 py-4 sm:px-6">
+              <h2 className="text-lg font-semibold text-white">Find your perfect pod</h2>
+              <p className="text-sm text-slate-400">Enter location and schedule to search availability</p>
+            </div>
+            <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-4">
+              <Input
+                label="State"
+                name="state"
+                placeholder="e.g. Karnataka"
+                value={stateName}
+                onChange={(e) => setStateName(e.target.value)}
+                error={errors.state}
+                icon={MapPin}
+                required
+              />
+              <Input
+                label="City"
+                name="city"
+                placeholder="e.g. Bangalore"
+                value={cityName}
+                onChange={(e) => setCityName(e.target.value)}
+                error={errors.city}
+                icon={MapPin}
+                required
+              />
+              <Input
+                label="Date"
+                name="date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                error={errors.date}
+                icon={Calendar}
+                required
+              />
+              <Input
+                label="Time"
+                name="time"
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                error={errors.time}
+                icon={Clock}
+                required
+              />
+            </div>
+            <div className="border-t border-white/10 px-5 py-4 sm:px-6">
+              <Button type="submit" size="lg" className="w-full sm:w-auto">
+                Search Pods
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </div>
+          </Card>
+        </form>
+      </div>
+    </section>
+  );
+};
+
+export default Hero;
+d.LowerBar.jsx:
+
+import React from 'react';
+import { Sparkles } from 'lucide-react';
+
+const LowerBar = () => {
+  return (
+    <div
+      className="relative overflow-hidden border-y border-white/5 bg-gradient-to-r from-surface-900 via-surface-800 to-surface-700"
+      role="region"
+      aria-label="Promotional offer"
+    >
+      <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-2.5">
+        <Sparkles className="h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
+        <p className="text-center text-xs font-medium text-slate-300 sm:text-sm">
+          Diwali Offers — up to{' '}
+          <span className="font-semibold text-amber-400">25% off</span> on every pod
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default LowerBar;
+
+
+e:roleRoute.jsx:
+
+import React from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../../context/authContext";
+
+
+const RoleRoute = ({ allowedRoles }) => {
+
+    const {
+        user,
+        loading,
+        isAuthenticated
+    } = useAuth();
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+                <div className="text-center">
+                    <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+
+                    <p className="text-slate-400">
+                        Checking authentication...
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if (!allowedRoles.includes(user.role)) {
+        return <Navigate to="/" replace />;
+    }
+
+    return <Outlet />;
+};
+
+export default RoleRoute;
+
+
+f.SearchNavbar.jsx:
+
+import React, { useState } from "react";
+
+const SearchNavbar = () => {
+  const [bookingDetails, setBookingDetails] = useState({
+    state: "Karnataka",
+    city: "Bangalore",
+    date: "14 May 2026",
+    time: "10:30 PM",
+  });
+
+  return (
+    <div className="w-full bg-white border-b border-gray-200 shadow-sm">
+      
+      {/* MAIN NAVBAR */}
+      <div
+        className="
+          max-w-7xl
+          mx-auto
+          flex
+          flex-col
+          lg:flex-row
+          lg:items-center
+          overflow-hidden
+        "
+      >
+        
+        {/* LOGO */}
+        <div
+          className="
+            px-6
+            py-5
+            border-b
+            lg:border-b-0
+            lg:border-r
+            border-gray-200
+            flex
+            items-center
+            justify-center
+            lg:justify-start
+          "
+        >
+          <h1 className="text-5xl font-black text-red-500">
+            PODS
+          </h1>
+        </div>
+
+        {/* SEARCH DETAILS */}
+        <div
+          className="
+            flex-1
+            grid
+            grid-cols-1
+            sm:grid-cols-2
+            lg:grid-cols-4
+          "
+        >
+          
+          {/* LOCATION */}
+          <div
+            className="
+              px-5
+              py-4
+              border-b
+              sm:border-r
+              border-gray-200
+            "
+          >
+            <p className="text-sm text-gray-500">
+              Location
+            </p>
+
+            <h2 className="text-xl font-semibold text-gray-900 mt-1">
+              {bookingDetails.city},{" "}
+              {bookingDetails.state}
+            </h2>
+          </div>
+
+          {/* DATE */}
+          <div
+            className="
+              px-5
+              py-4
+              border-b
+              lg:border-r
+              border-gray-200
+            "
+          >
+            <p className="text-sm text-gray-500">
+              Booking Date
+            </p>
+
+            <h2 className="text-xl font-semibold text-gray-900 mt-1">
+              {bookingDetails.date}
+            </h2>
+          </div>
+
+          {/* TIME */}
+          <div
+            className="
+              px-5
+              py-4
+              border-b
+              sm:border-r
+              border-gray-200
+            "
+          >
+            <p className="text-sm text-gray-500">
+              Booking Time
+            </p>
+
+            <h2 className="text-xl font-semibold text-gray-900 mt-1">
+              {bookingDetails.time}
+            </h2>
+          </div>
+
+          {/* SEARCH BUTTON */}
+          <div
+            className="
+              flex
+              items-center
+              justify-center
+              p-4
+            "
+          >
+            <button
+              className="
+                w-full
+                bg-green-500
+                hover:bg-green-600
+                transition-all
+                duration-300
+                text-white
+                font-bold
+                text-xl
+                py-4
+                rounded-xl
+              "
+            >
+              Search Pods
+            </button>
+          </div>
+        </div>
+
+        {/* RIGHT SECTION */}
+        <div
+          className="
+            hidden
+            xl:flex
+            items-center
+            gap-8
+            px-6
+            py-4
+            border-l
+            border-gray-200
+          "
+        >
+          
+          {/* CONTACT */}
+          <div>
+            <p className="text-2xl font-bold text-gray-900">
+              0124-6201611
+            </p>
+
+            <p className="text-gray-500 text-sm">
+              Call us to Book now
+            </p>
+          </div>
+
+          {/* LOGIN */}
+          <button
+            className="
+              border
+              border-gray-300
+              px-5
+              py-3
+              rounded-xl
+              font-semibold
+              hover:bg-gray-100
+              transition
+            "
+          >
+            Login / Signup
+          </button>
+        </div>
+      </div>
+
+      {/* MOBILE BAR */}
+      <div
+        className="
+          lg:hidden
+          bg-gray-100
+          px-4
+          py-3
+          flex
+          justify-between
+          items-center
+          text-sm
+          font-medium
+          text-gray-700
+        "
+      >
+        
+        {/* DATE */}
+        <span>
+          📅 {bookingDetails.date}
+        </span>
+
+        {/* TIME */}
+        <span>
+          ⏰ {bookingDetails.time}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+export default SearchNavbar;
+
+
+d.UserLayout.jsx:
+
+import React from 'react';
+import Header from '../Common/Header';
+import Footer from '../Common/Footer';
+import LowerBar from './LowerBar';
+import { Outlet } from 'react-router-dom';
+
+const UserLayout = () => {
+  return (
+    <div className="flex min-h-screen flex-col bg-surface-900">
+      <Header />
+      <LowerBar />
+      <main className="flex-1 page-enter">
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default UserLayout;
+
+3. Pods-->
+
+a.OurPods.jsx:
+
+// import React from 'react'
+// import Hero from '../Layout/Hero'
+// import HeroImg from '../Images/HeroImg.png'
+// import { FaClock} from "react-icons/fa";
+// import { Snowflake} from "lucide-react";
+// import { IoWifiOutline } from "react-icons/io5";
+// import { LuLock } from "react-icons/lu";
+// import { FiNavigation } from "react-icons/fi";
+// import API from "../../api/axios";
+// import { useState, useEffect } from 'react';
+
+// const OurPods = () => {
+//     const [pods, setPods] = useState([]);
+
+// useEffect(() => {
+
+//     const fetchPods = async () => {
+
+//         try {
+
+//             const response = await API.get("/pods");
+
+//             setPods(response.data);
+
+//         } catch (error) {
+
+//             console.error(error);
+
+//         }
+//     };
+
+//     fetchPods();
+
+// }, []);
+
+//   return (
+//     <>
+//     <div className='bg-gradient-to-r from-[#030912] via-[#0b1e3c] to-[#09101b] mt-0'>
+//      <div className='bg-[#010409]/80 p-6'>
+       
+//           <h3 className='text-3xl sm:text-4xl text-center text-white font-Bungee
+//           font-bold p-6'>Recharge Anytime. Rest in Comfort.</h3>
+//           <div className='flex justify-center items-center tracking-tighter  font-serif text-white 
+//           '>
+//             <h3 className='sm:text-md text-md px-2 py-4 text-center'> Step into a new way of relaxing with Restify — your personal space to unwind, refresh, and recharge whenever you need it.
+//             <br/>
+//              Designed for modern lifestyles, our smart sleeping pods offer privacy, comfort, and flexibility — all at your fingertips. Whether it’s a quick nap or a full day’s rest, Restify adapts to you.
+//             </h3>
+//           </div>
+//         </div>
+//             <h1 className='text-center text-4xl font-bold font-bungee font-serif text-white py-4 mt-4 
+//         ' >Our Pods</h1>
+//         <div className='flex flex-row md:flex-row-2 flex-wrap flex-grow justify-center gap-10 p-4'>
+//             <div className='h-80 w-120 '>
+    
+//              <img src="https://static.vecteezy.com/system/resources/thumbnails/059/516/384/small/cozy-sleeping-area-inside-futuristic-pod-with-large-window-showcasing-serene-mountain-view-free-photo.jpeg"
+//              className='p-4 bg-cover' alt="" />
+//                  </div>
+       
+//         <div className='h-80 w-120'>
+//              <img src="https://static.vecteezy.com/system/resources/thumbnails/059/516/384/small/cozy-sleeping-area-inside-futuristic-pod-with-large-window-showcasing-serene-mountain-view-free-photo.jpeg"
+//              className='p-4 bg-cover' alt="" />
+//                  </div>
+        
+//                     <div className='h-80 w-120 '>
+//                        <img src="https://static.vecteezy.com/system/resources/thumbnails/059/516/384/small/cozy-sleeping-area-inside-futuristic-pod-with-large-window-showcasing-serene-mountain-view-free-photo.jpeg"
+//              className='p-4 bg-cover' alt="" />
+//                     </div>
+       
+//         <div className='h-80 w-120 '>
+//            <img src="https://static.vecteezy.com/system/resources/thumbnails/059/516/384/small/cozy-sleeping-area-inside-futuristic-pod-with-large-window-showcasing-serene-mountain-view-free-photo.jpeg"
+//              className='p-4 bg-cover ' alt="" />
+//         </div>
+//          </div>
+
+//          <div className='flex justify-center items-center px-3 py-4 flex-grow'>
+//           <div>
+//               <h1 className='text-3xl md:text-4xl font-bungee font-bold text-white p-4 text-center'>
+//                 What we Offer
+//               </h1>
+//               <div className='flex flex-wrap flex=grow p-4 gap-20 justify-center'>
+//                 <div className='border-2 border-blue-400 h-46 w-80 '>
+//                    <FaClock className="text-4xl border-4 border-blue-400 shadow-[0_0_40px_rgba(59,80,246,0.7)] rounded-full mt-4 ml-4  text-blue-400" />
+//                    <h1 className='text-2xl font-bold text-white font-bungee p-2'>Hourly Stays</h1>
+//                    <h3 className='text-md font-serif text-white p-2 tracking-tighter'> Book For Just A Few Hours When You need a break</h3>
+//                 </div>
+//                   <div className='border-2 border-blue-400 h-46 w-80 '>
+//                   <div className="h-9 w-9 rounded-full border border-blue-400 mt-4 ml-4 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+//                     <Snowflake size={30} className="text-blue-400" />
+//                   </div>
+//                    <h1 className='text-2xl font-bold text-white font-bungee p-2'>AC Pods</h1>
+//                    <h3 className='text-md font-serif text-white p-2 tracking-tighter'>Climate Controlled-comfort Year Round</h3>
+//                 </div>
+//                 <div className='border-2 border-blue-400 h-46 w-80 '>
+//                    <div className="h-9 w-9 rounded-full border border-blue-400 mt-4 ml-4 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+//                      <IoWifiOutline className="text-3xl text-blue-400" />
+//                   </div>
+//                    <h1 className='text-2xl font-bold text-white font-bungee p-2'>Free Wifi</h1>
+//                    <h3 className='text-md font-serif text-white p-2 tracking-tighter'> Stay Connected During Your Rest</h3>
+//                 </div>
+//               </div>
+//                  <div className='flex flex-wrap flex=grow p-6 mt-5 gap-20 justify-center'>
+//                 <div className='border-2 border-blue-400 h-40 w-80 md:w-130 '>
+//                    <div className="h-10 w-10 rounded-full border border-blue-400 mt-4 ml-4 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+//                       <LuLock className="text-2xl text-blue-400" />
+//                   </div>
+//                    <h1 className='text-2xl font-bold text-white font-bungee p-2'>Secure Lockers</h1>
+//                    <h3 className='text-md font-serif text-white p-2 tracking-tighter'> Safe Storage For Your Belongings</h3>
+//                 </div>
+//                    <div className='border-2 border-blue-400 h-40 w-80 md:w-130 '>
+//                       <div className="h-10 w-10 rounded-full border border-blue-400 mt-4 ml-4 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+//                     <FiNavigation className="text-2xl text-blue-400" />
+//                       </div>
+              
+                 
+//                    <h1 className='text-2xl font-bold text-white font-bungee p-2'>24X7 ACCESS</h1>
+//                    <h3 className='text-md font-serif text-white p-2 tracking-tighter'> Rest anytime, day or night</h3>
+//                    </div>
+//                                   </div> 
+//               </div>
+//                 <h3 className='text-xl md:text-2xl font-serif text-gray-700'></h3>
+            
+//          </div>
+
+//          <div className='p-4 '>
+//           <h1 className='text-sm md:text-md  font-serif text-white tracking-tighter text-center md:px-50 py-10 bg-black/50'>
+//                 “Escape the chaos of metro life with Restify — modern hourly rest pods designed for travelers,
+//                  students, and professionals who need comfort without paying expensive hotel prices.
+//                   Relax, recharge, and continue your journey with premium comfort starting at just hourly rates.”
+//           </h1>
+//          </div>
+//           <div className='p-4 '>
+//           <h1 className='text-sm md:text-md  font-serif text-white tracking-tighter text-center md:px-50 py-10 bg-black/50'>
+//                “In a city that never slows down, Restify creates a peaceful space where fatigue turns into relaxation.
+//                 Whether you're stuck in traffic, waiting between travels, or simply needing a quick break,
+//                  our smart rest pods offer comfort, privacy, and convenience anytime you need it.”
+//           </h1>
+//          </div>
+//          </div>
+//     </>
+//   )
+// }
+
+// export default OurPods
+
+import React, { useEffect, useState } from "react";
+
+import {
+    MapPin,
+    Users,
+    Wifi,
+    LoaderCircle,
+    ArrowRight
+} from "lucide-react";
+
+import API from "../../api/axios";
+
+const OurPods = () => {
+
+    const [pods, setPods] = useState([]);
+
+    const [loading, setLoading] = useState(true);
+
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+
+        const fetchPods = async () => {
+
+            try {
+
+                setLoading(true);
+
+                const response =
+                    await API.get("/pods");
+
+                setPods(response.data);
+
+            } catch (error) {
+
+                console.error(error);
+
+                setError(
+                    error.response?.data?.message ||
+                    "Unable to load pods."
+                );
+
+            } finally {
+
+                setLoading(false);
+
+            }
+        };
+
+        fetchPods();
+
+    }, []);
+
+    return (
+
+        <section className="min-h-screen bg-gradient-to-r from-[#030912] via-[#0b1e3c] to-[#09101b] px-4 py-12 sm:px-6 lg:px-8">
+
+            <div className="mx-auto max-w-7xl">
+
+                <div className="mx-auto mb-12 max-w-3xl text-center">
+
+                    <h1 className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+                        Our Pods
+                    </h1>
+
+                    <p className="mt-4 text-sm leading-6 text-slate-400 sm:text-base">
+                        Private, comfortable and affordable
+                        sleeping pods available whenever
+                        you need to rest.
+                    </p>
+
+                </div>
+
+
+                {/* Loading */}
+
+                {loading && (
+
+                    <div className="flex min-h-[300px] items-center justify-center">
+
+                        <div className="text-center">
+
+                            <LoaderCircle className="mx-auto h-10 w-10 animate-spin text-blue-400" />
+
+                            <p className="mt-4 text-slate-400">
+                                Loading pods...
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                )}
+
+
+                {/* Error */}
+
+                {!loading && error && (
+
+                    <div className="mx-auto max-w-xl rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-center text-red-400">
+                        {error}
+                    </div>
+
+                )}
+
+
+                {/* Empty */}
+
+                {!loading &&
+                    !error &&
+                    pods.length === 0 && (
+
+                        <div className="rounded-3xl border border-slate-800 bg-slate-900 p-10 text-center">
+
+                            <h2 className="text-xl font-semibold text-white">
+                                No pods available
+                            </h2>
+
+                            <p className="mt-2 text-slate-500">
+                                New pods will appear here once
+                                an owner or admin creates them.
+                            </p>
+
+                        </div>
+
+                    )}
+
+
+                {/* POD GRID */}
+
+                {!loading &&
+                    !error &&
+                    pods.length > 0 && (
+
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+
+                            {pods.map((pod) => (
+
+                                <PodCard
+                                    key={pod._id}
+                                    pod={pod}
+                                />
+
+                            ))}
+
+                        </div>
+
+                    )}
+
+            </div>
+
+        </section>
+    );
+};
+
+
+const PodCard = ({ pod }) => {
+
+    const image =
+        pod.images?.[0] ||
+        "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop";
+
+    return (
+
+        <article className="group overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-xl transition duration-300 hover:-translate-y-1 hover:border-blue-500/40">
+
+            {/* IMAGE */}
+
+            <div className="relative h-56 overflow-hidden">
+
+                <img
+                    src={image}
+                    alt={pod.podName}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+
+                <div className="absolute left-4 top-4 rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-semibold text-white">
+                    {pod.status || "Available"}
+                </div>
+
+                <div className="absolute bottom-4 left-4">
+
+                    <h2 className="text-xl font-bold text-white">
+                        {pod.podName}
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            {/* CONTENT */}
+
+            <div className="p-5">
+
+                <div className="flex items-start gap-2 text-sm text-slate-400">
+
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" />
+
+                    <span>
+                        {pod.location}
+                    </span>
+
+                </div>
+
+                <div className="mt-2 text-sm text-slate-500">
+                    {pod.city}, {pod.state}
+                </div>
+
+
+                <p className="mt-4 line-clamp-2 text-sm leading-6 text-slate-400">
+                    {pod.description}
+                </p>
+
+
+                <div className="mt-5 flex items-center justify-between border-t border-slate-800 pt-5">
+
+                    <div>
+
+                        <p className="text-xs text-slate-500">
+                            Starting from
+                        </p>
+
+                        <p className="text-xl font-bold text-white">
+                            ₹{pod.hourlyPrice}
+                            <span className="text-sm font-normal text-slate-500">
+                                /hour
+                            </span>
+                        </p>
+
+                    </div>
+
+
+                    <div className="flex items-center gap-1 text-sm text-slate-400">
+
+                        <Users className="h-4 w-4" />
+
+                        {pod.capacity}
+
+                    </div>
+
+                </div>
+
+
+                {pod.amenities?.length > 0 && (
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+
+                        {pod.amenities
+                            .slice(0, 3)
+                            .map((amenity) => (
+
+                                <span
+                                    key={amenity}
+                                    className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300"
+                                >
+                                    {amenity}
+                                </span>
+
+                            ))}
+
+                    </div>
+
+                )}
+
+            </div>
+
+        </article>
+    );
+};
+
+export default OurPods;
+
+
+b.PodManagement.jsx:
+
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import {
+    Plus,
+    X,
+    ImagePlus,
+    MapPin,
+    IndianRupee,
+    Users,
+    Building2
+} from "lucide-react";
+
+import API from "../../api/axios";
+import { useAuth } from "../../context/authContext";
+
+const initialForm = {
+    podName: "",
+    description: "",
+    location: "",
+    city: "",
+    state: "",
+    hourlyPrice: "",
+    dayPrice: "",
+    capacity: "1",
+    amenities: [],
+    images: []
+};
+
+const PodManagement = () => {
+
+    const navigate = useNavigate();
+
+    const { user } = useAuth();
+
+    const [formData, setFormData] = useState(initialForm);
+
+    const [amenityInput, setAmenityInput] = useState("");
+
+    const [imageInput, setImageInput] = useState("");
+
+    const [loading, setLoading] = useState(false);
+
+    const [error, setError] = useState("");
+
+    const [success, setSuccess] = useState("");
+
+    const handleChange = (e) => {
+
+        const {
+            name,
+            value
+        } = e.target;
+
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const addAmenity = () => {
+
+        const value = amenityInput.trim();
+
+        if (!value) return;
+
+        if (formData.amenities.includes(value)) {
+            return;
+        }
+
+        setFormData((prev) => ({
+            ...prev,
+            amenities: [
+                ...prev.amenities,
+                value
+            ]
+        }));
+
+        setAmenityInput("");
+    };
+
+    const removeAmenity = (amenity) => {
+
+        setFormData((prev) => ({
+            ...prev,
+            amenities: prev.amenities.filter(
+                (item) => item !== amenity
+            )
+        }));
+    };
+
+    const addImage = () => {
+
+        const value = imageInput.trim();
+
+        if (!value) return;
+
+        setFormData((prev) => ({
+            ...prev,
+            images: [
+                ...prev.images,
+                value
+            ]
+        }));
+
+        setImageInput("");
+    };
+
+    const removeImage = (image) => {
+
+        setFormData((prev) => ({
+            ...prev,
+            images: prev.images.filter(
+                (item) => item !== image
+            )
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+
+        e.preventDefault();
+
+        setError("");
+        setSuccess("");
+
+        if (
+            !formData.podName ||
+            !formData.description ||
+            !formData.location ||
+            !formData.city ||
+            !formData.state ||
+            !formData.hourlyPrice ||
+            !formData.dayPrice
+        ) {
+
+            setError(
+                "Please fill all required fields."
+            );
+
+            return;
+        }
+
+        try {
+
+            setLoading(true);
+
+            const payload = {
+
+                podName: formData.podName.trim(),
+
+                description:
+                    formData.description.trim(),
+
+                location:
+                    formData.location.trim(),
+
+                city:
+                    formData.city.trim(),
+
+                state:
+                    formData.state.trim(),
+
+                hourlyPrice:
+                    Number(formData.hourlyPrice),
+
+                dayPrice:
+                    Number(formData.dayPrice),
+
+                capacity:
+                    Number(formData.capacity),
+
+                amenities:
+                    formData.amenities,
+
+                images:
+                    formData.images
+
+            };
+
+            const response = await API.post(
+                "/pods/create-pod",
+                payload
+            );
+
+            console.log(
+                "Created pod:",
+                response.data
+            );
+
+            setSuccess(
+                "Pod created successfully!"
+            );
+
+            setFormData(initialForm);
+
+            setTimeout(() => {
+
+                navigate("/pods");
+
+            }, 1000);
+
+        } catch (error) {
+
+            console.error(error);
+
+            setError(
+                error.response?.data?.message ||
+                "Unable to create pod."
+            );
+
+        } finally {
+
+            setLoading(false);
+
+        }
+    };
+
+    return (
+        <section className="min-h-screen bg-slate-950 px-4 py-10 sm:px-6 lg:px-8">
+
+            <div className="mx-auto max-w-5xl">
+
+                {/* Header */}
+
+                <div className="mb-8">
+
+                    <p className="text-sm font-semibold uppercase tracking-widest text-blue-400">
+                        {user?.role} dashboard
+                    </p>
+
+                    <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">
+                        Create a New Pod
+                    </h1>
+
+                    <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
+                        Add a new Restify pod. Once created,
+                        it will immediately become available
+                        in the customer pod listings.
+                    </p>
+
+                </div>
+
+                {/* Messages */}
+
+                {error && (
+                    <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
+                        {error}
+                    </div>
+                )}
+
+                {success && (
+                    <div className="mb-6 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-400">
+                        {success}
+                    </div>
+                )}
+
+                {/* Form */}
+
+                <form
+                    onSubmit={handleSubmit}
+                    className="space-y-6"
+                >
+
+                    {/* BASIC DETAILS */}
+
+                    <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl sm:p-8">
+
+                        <div className="mb-6 flex items-center gap-3">
+
+                            <div className="rounded-xl bg-blue-500/10 p-3 text-blue-400">
+                                <Building2 className="h-5 w-5" />
+                            </div>
+
+                            <div>
+                                <h2 className="font-semibold text-white">
+                                    Pod Information
+                                </h2>
+
+                                <p className="text-sm text-slate-500">
+                                    Basic information about the pod
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div className="grid gap-5 md:grid-cols-2">
+
+                            <InputField
+                                label="Pod Name"
+                                name="podName"
+                                value={formData.podName}
+                                onChange={handleChange}
+                                placeholder="Luxury Sleep Pod Bengaluru"
+                            />
+
+                            <InputField
+                                label="Capacity"
+                                name="capacity"
+                                type="number"
+                                min="1"
+                                value={formData.capacity}
+                                onChange={handleChange}
+                                placeholder="1"
+                            />
+
+                            <div className="md:col-span-2">
+
+                                <label className="mb-2 block text-sm font-medium text-slate-300">
+                                    Description
+                                </label>
+
+                                <textarea
+                                    name="description"
+                                    value={formData.description}
+                                    onChange={handleChange}
+                                    rows="4"
+                                    placeholder="Describe the pod, facilities and comfort..."
+                                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                />
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    {/* LOCATION */}
+
+                    <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl sm:p-8">
+
+                        <div className="mb-6 flex items-center gap-3">
+
+                            <div className="rounded-xl bg-blue-500/10 p-3 text-blue-400">
+                                <MapPin className="h-5 w-5" />
+                            </div>
+
+                            <div>
+                                <h2 className="font-semibold text-white">
+                                    Location
+                                </h2>
+
+                                <p className="text-sm text-slate-500">
+                                    Where is this pod located?
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div className="grid gap-5 md:grid-cols-2">
+
+                            <div className="md:col-span-2">
+
+                                <InputField
+                                    label="Full Location"
+                                    name="location"
+                                    value={formData.location}
+                                    onChange={handleChange}
+                                    placeholder="Whitefield, Near Metro Station"
+                                />
+
+                            </div>
+
+                            <InputField
+                                label="City"
+                                name="city"
+                                value={formData.city}
+                                onChange={handleChange}
+                                placeholder="Bangalore"
+                            />
+
+                            <InputField
+                                label="State"
+                                name="state"
+                                value={formData.state}
+                                onChange={handleChange}
+                                placeholder="Karnataka"
+                            />
+
+                        </div>
+
+                    </div>
+
+                    {/* PRICING */}
+
+                    <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl sm:p-8">
+
+                        <div className="mb-6 flex items-center gap-3">
+
+                            <div className="rounded-xl bg-emerald-500/10 p-3 text-emerald-400">
+                                <IndianRupee className="h-5 w-5" />
+                            </div>
+
+                            <div>
+                                <h2 className="font-semibold text-white">
+                                    Pricing
+                                </h2>
+
+                                <p className="text-sm text-slate-500">
+                                    Set hourly and daily pricing
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div className="grid gap-5 md:grid-cols-2">
+
+                            <InputField
+                                label="Hourly Price"
+                                name="hourlyPrice"
+                                type="number"
+                                min="0"
+                                value={formData.hourlyPrice}
+                                onChange={handleChange}
+                                placeholder="149"
+                            />
+
+                            <InputField
+                                label="Day Price"
+                                name="dayPrice"
+                                type="number"
+                                min="0"
+                                value={formData.dayPrice}
+                                onChange={handleChange}
+                                placeholder="799"
+                            />
+
+                        </div>
+
+                    </div>
+
+                    {/* AMENITIES */}
+
+                    <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl sm:p-8">
+
+                        <h2 className="mb-2 font-semibold text-white">
+                            Amenities
+                        </h2>
+
+                        <p className="mb-5 text-sm text-slate-500">
+                            Add facilities available inside the pod.
+                        </p>
+
+                        <div className="flex flex-col gap-3 sm:flex-row">
+
+                            <input
+                                value={amenityInput}
+                                onChange={(e) =>
+                                    setAmenityInput(e.target.value)
+                                }
+                                onKeyDown={(e) => {
+
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        addAmenity();
+                                    }
+
+                                }}
+                                placeholder="Free WiFi"
+                                className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+                            />
+
+                            <button
+                                type="button"
+                                onClick={addAmenity}
+                                className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+                            >
+                                <Plus className="h-4 w-4" />
+                                Add
+                            </button>
+
+                        </div>
+
+                        <div className="mt-5 flex flex-wrap gap-2">
+
+                            {formData.amenities.map(
+                                (amenity) => (
+
+                                    <span
+                                        key={amenity}
+                                        className="inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-sm text-blue-300"
+                                    >
+                                        {amenity}
+
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                removeAmenity(
+                                                    amenity
+                                                )
+                                            }
+                                            className="text-blue-400 hover:text-white"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+
+                                    </span>
+
+                                )
+                            )}
+
+                        </div>
+
+                    </div>
+
+                    {/* IMAGES */}
+
+                    <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl sm:p-8">
+
+                        <div className="mb-6 flex items-center gap-3">
+
+                            <div className="rounded-xl bg-purple-500/10 p-3 text-purple-400">
+                                <ImagePlus className="h-5 w-5" />
+                            </div>
+
+                            <div>
+                                <h2 className="font-semibold text-white">
+                                    Pod Images
+                                </h2>
+
+                                <p className="text-sm text-slate-500">
+                                    Add image URLs for the pod.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div className="flex flex-col gap-3 sm:flex-row">
+
+                            <input
+                                value={imageInput}
+                                onChange={(e) =>
+                                    setImageInput(e.target.value)
+                                }
+                                placeholder="https://example.com/pod.jpg"
+                                className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+                            />
+
+                            <button
+                                type="button"
+                                onClick={addImage}
+                                className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 font-semibold text-white hover:bg-purple-500"
+                            >
+                                <Plus className="h-4 w-4" />
+                                Add Image
+                            </button>
+
+                        </div>
+
+                        <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
+
+                            {formData.images.map(
+                                (image) => (
+
+                                    <div
+                                        key={image}
+                                        className="group relative overflow-hidden rounded-2xl border border-slate-700"
+                                    >
+
+                                        <img
+                                            src={image}
+                                            alt="Pod"
+                                            className="h-32 w-full object-cover"
+                                            onError={(e) => {
+                                                e.currentTarget.style.display =
+                                                    "none";
+                                            }}
+                                        />
+
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                removeImage(image)
+                                            }
+                                            className="absolute right-2 top-2 rounded-full bg-black/70 p-2 text-white opacity-0 transition group-hover:opacity-100"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+
+                                    </div>
+
+                                )
+                            )}
+
+                        </div>
+
+                    </div>
+
+                    {/* SUBMIT */}
+
+                    <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+
+                        <button
+                            type="button"
+                            onClick={() => navigate("/pods")}
+                            className="rounded-xl border border-slate-700 px-6 py-3 font-semibold text-slate-300 hover:bg-slate-900"
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-7 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            {loading ? (
+                                <>
+                                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                    Creating...
+                                </>
+                            ) : (
+                                <>
+                                    <Plus className="h-5 w-5" />
+                                    Create Pod
+                                </>
+                            )}
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </section>
+    );
+};
+
+const InputField = ({
+    label,
+    name,
+    type = "text",
+    value,
+    onChange,
+    placeholder,
+    min
+}) => {
+
+    return (
+        <div>
+
+            <label className="mb-2 block text-sm font-medium text-slate-300">
+                {label}
+            </label>
+
+            <input
+                name={name}
+                type={type}
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                min={min}
+                required
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            />
+
+        </div>
+    );
+};
+
+export default PodManagement;
+
+
+c.SearchPods.jsx:
+
+import React, { useEffect, useState } from "react";
+import { useSearch } from "../../context/SearchContext";
+
+import {
+    MapPin,
+    Calendar,
+    Clock,
+    Users,
+    LoaderCircle,
+    X
+} from "lucide-react";
+
+import API from "../../api/axios";
+
+
+const SearchPods = () => {
+
+    // --------------------------------
+    // SEARCH CONTEXT
+    // --------------------------------
+
+    const { searchCriteria } = useSearch();
+
+    const {
+        state,
+        city,
+        date,
+        time
+    } = searchCriteria;
+
+
+    // --------------------------------
+    // STATES
+    // --------------------------------
+
+    const [pods, setPods] = useState([]);
+
+    const [loading, setLoading] = useState(true);
+
+    const [error, setError] = useState("");
+
+    const [selectedPod, setSelectedPod] = useState(null);
+
+
+    // --------------------------------
+    // SEARCH PODS
+    // --------------------------------
+
+    useEffect(() => {
+
+        const searchPods = async () => {
+
+            try {
+
+                setLoading(true);
+
+                setError("");
+
+                console.log(
+                    "Searching pods with:",
+                    {
+                        state,
+                        city,
+                        date,
+                        time
+                    }
+                );
+
+
+                // --------------------------------
+                // CALL BACKEND
+                // --------------------------------
+
+                const response = await API.get(
+                    "/pods/search",
+                    {
+                        params: {
+
+                            city: city,
+
+                            date: date,
+
+                            time: time,
+
+                            bookingDate: date
+
+                        }
+                    }
+                );
+
+
+                console.log(
+                    "Backend response:",
+                    response.data
+                );
+
+
+                // --------------------------------
+                // STORE PODS
+                // --------------------------------
+
+                setPods(
+                    response.data.pods || []
+                );
+
+
+            } catch (err) {
+
+                console.error(
+                    "Search pods error:",
+                    err
+                );
+
+
+                setError(
+                    err.response?.data?.message ||
+                    "Unable to search pods."
+                );
+
+
+                setPods([]);
+
+            } finally {
+
+                setLoading(false);
+
+            }
+
+        };
+
+
+        // Only search if city exists
+
+        if (city) {
+
+            searchPods();
+
+        } else {
+
+            setPods([]);
+
+            setLoading(false);
+
+        }
+
+    }, [
+        city,
+        state,
+        date,
+        time
+    ]);
+
+
+    // --------------------------------
+    // LOADING
+    // --------------------------------
+
+    if (loading) {
+
+        return (
+
+            <div className="min-h-screen bg-gradient-to-r from-[#030912] via-[#0b1e3c] to-[#09101b] flex items-center justify-center">
+
+                <div className="text-center text-white">
+
+                    <LoaderCircle
+                        className="
+                            w-10
+                            h-10
+                            mx-auto
+                            animate-spin
+                            text-green-400
+                        "
+                    />
+
+                    <p className="mt-4 text-lg">
+                        Searching available pods...
+                    </p>
+
+                </div>
+
+            </div>
+
+        );
+
+    }
+
+
+    // --------------------------------
+    // MAIN UI
+    // --------------------------------
+
+    return (
+
+        <div className="min-h-screen bg-gradient-to-r from-[#030912] via-[#0b1e3c] to-[#09101b]">
+
+            {/* ================================= */}
+            {/* SEARCH SUMMARY */}
+            {/* ================================= */}
+
+            <div className="
+                sticky
+                top-0
+                z-40
+                bg-black/90
+                backdrop-blur-md
+                border-b
+                border-white/10
+            ">
+
+                <div className="
+                    max-w-7xl
+                    mx-auto
+                    px-4
+                    py-4
+                    sm:px-6
+                    lg:px-8
+                ">
+
+                    <div className="
+                        flex
+                        flex-col
+                        gap-3
+                        md:flex-row
+                        md:items-center
+                        md:justify-between
+                    ">
+
+                        {/* LOCATION */}
+
+                        <div className="flex items-center gap-2">
+
+                            <MapPin
+                                className="text-emerald-400"
+                            />
+
+                            <div>
+
+                                <p className="text-xs text-slate-400">
+                                    Location
+                                </p>
+
+                                <p className="font-semibold text-white capitalize">
+
+                                    {city}
+
+                                    {state && (
+                                        <>
+                                            , {state}
+                                        </>
+                                    )}
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        {/* DATE */}
+
+                        <div className="flex items-center gap-2">
+
+                            <Calendar
+                                className="text-blue-400"
+                            />
+
+                            <div>
+
+                                <p className="text-xs text-slate-400">
+                                    Date
+                                </p>
+
+                                <p className="font-semibold text-white">
+                                    {date}
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        {/* TIME */}
+
+                        <div className="flex items-center gap-2">
+
+                            <Clock
+                                className="text-purple-400"
+                            />
+
+                            <div>
+
+                                <p className="text-xs text-slate-400">
+                                    Time
+                                </p>
+
+                                <p className="font-semibold text-white">
+                                    {time}
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        {/* RESULT COUNT */}
+
+                        <div className="
+                            rounded-xl
+                            bg-white/10
+                            px-4
+                            py-2
+                            text-sm
+                            text-white
+                        ">
+
+                            <span className="font-bold">
+                                {pods.length}
+                            </span>
+
+                            {" "}
+
+                            pods found
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            {/* ================================= */}
+            {/* CONTENT */}
+            {/* ================================= */}
+
+            <div className="
+                max-w-7xl
+                mx-auto
+                px-4
+                py-8
+                sm:px-6
+                lg:px-8
+            ">
+
+
+                {/* ERROR */}
+
+                {error && (
+
+                    <div className="
+                        mb-6
+                        rounded-2xl
+                        border
+                        border-red-500/30
+                        bg-red-500/10
+                        p-5
+                        text-red-400
+                    ">
+
+                        <p className="font-semibold">
+                            Search failed
+                        </p>
+
+                        <p className="mt-1 text-sm">
+                            {error}
+                        </p>
+
+                    </div>
+
+                )}
+
+
+                {/* NO PODS */}
+
+                {!error && pods.length === 0 && (
+
+                    <div className="
+                        rounded-3xl
+                        border
+                        border-white/10
+                        bg-white/5
+                        p-10
+                        text-center
+                    ">
+
+                        <h2 className="
+                            text-2xl
+                            font-bold
+                            text-white
+                        ">
+                            No pods found
+                        </h2>
+
+                        <p className="
+                            mt-3
+                            text-slate-400
+                        ">
+
+                            We couldn't find any pods
+                            in {city} for your search.
+
+                        </p>
+
+                    </div>
+
+                )}
+
+
+                {/* ================================= */}
+                {/* POD LIST */}
+                {/* ================================= */}
+
+                <div className="space-y-6">
+
+                    {pods.map((pod) => (
+
+                        <div
+                            key={pod._id}
+                            className="
+                                overflow-hidden
+                                rounded-3xl
+                                border
+                                border-white/10
+                                bg-gray-100
+                                shadow-xl
+                                transition
+                                hover:-translate-y-1
+                            "
+                        >
+
+                            <div className="
+                                flex
+                                flex-col
+                                lg:flex-row
+                            ">
+
+
+                                {/* ================================= */}
+                                {/* IMAGE */}
+                                {/* ================================= */}
+
+                                <div className="
+                                    relative
+                                    w-full
+                                    lg:w-[40%]
+                                ">
+
+                                    <img
+                                        src={
+                                            pod.images?.[0] ||
+                                            "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop"
+                                        }
+                                        alt={pod.podName}
+                                        className="
+                                            h-64
+                                            w-full
+                                            object-cover
+                                            sm:h-80
+                                            lg:h-full
+                                        "
+                                    />
+
+
+                                    {/* STATUS */}
+
+                                    <div className="
+                                        absolute
+                                        left-4
+                                        top-4
+                                        rounded-full
+                                        bg-emerald-500
+                                        px-4
+                                        py-2
+                                        text-sm
+                                        font-bold
+                                        text-white
+                                    ">
+
+                                        {pod.status || "Available"}
+
+                                    </div>
+
+                                </div>
+
+
+                                {/* ================================= */}
+                                {/* DETAILS */}
+                                {/* ================================= */}
+
+                                <div className="
+                                    flex-1
+                                    p-6
+                                    lg:p-8
+                                ">
+
+
+                                    {/* TITLE */}
+
+                                    <h2 className="
+                                        text-2xl
+                                        font-bold
+                                        text-gray-900
+                                        md:text-3xl
+                                    ">
+
+                                        {pod.podName}
+
+                                    </h2>
+
+
+                                    {/* LOCATION */}
+
+                                    <div className="
+                                        mt-3
+                                        flex
+                                        items-start
+                                        gap-2
+                                        text-gray-600
+                                    ">
+
+                                        <MapPin
+                                            className="
+                                                mt-1
+                                                h-5
+                                                w-5
+                                                shrink-0
+                                                text-emerald-600
+                                            "
+                                        />
+
+                                        <div>
+
+                                            <p>
+                                                {pod.location}
+                                            </p>
+
+                                            <p className="
+                                                text-sm
+                                                text-gray-500
+                                            ">
+
+                                                {pod.city},{" "}
+                                                {pod.state}
+
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    {/* DESCRIPTION */}
+
+                                    <p className="
+                                        mt-5
+                                        leading-7
+                                        text-gray-600
+                                    ">
+
+                                        {pod.description}
+
+                                    </p>
+
+
+                                    {/* CAPACITY */}
+
+                                    <div className="
+                                        mt-5
+                                        flex
+                                        items-center
+                                        gap-2
+                                        text-gray-600
+                                    ">
+
+                                        <Users
+                                            className="
+                                                h-5
+                                                w-5
+                                            "
+                                        />
+
+                                        Capacity:
+
+                                        <strong>
+                                            {pod.capacity}
+                                        </strong>
+
+                                    </div>
+
+
+                                    {/* AMENITIES */}
+
+                                    {pod.amenities?.length > 0 && (
+
+                                        <div className="
+                                            mt-5
+                                            flex
+                                            flex-wrap
+                                            gap-2
+                                        ">
+
+                                            {pod.amenities.map(
+                                                (amenity, index) => (
+
+                                                    <span
+                                                        key={index}
+                                                        className="
+                                                            rounded-full
+                                                            bg-gray-200
+                                                            px-4
+                                                            py-2
+                                                            text-xs
+                                                            font-medium
+                                                            text-gray-700
+                                                        "
+                                                    >
+
+                                                        {amenity}
+
+                                                    </span>
+
+                                                )
+                                            )}
+
+                                        </div>
+
+                                    )}
+
+
+                                    {/* ================================= */}
+                                    {/* BOTTOM */}
+                                    {/* ================================= */}
+
+                                    <div className="
+                                        mt-7
+                                        flex
+                                        flex-col
+                                        gap-5
+                                        border-t
+                                        border-gray-200
+                                        pt-6
+                                        sm:flex-row
+                                        sm:items-center
+                                        sm:justify-between
+                                    ">
+
+
+                                        {/* PRICE */}
+
+                                        <div>
+
+                                            <p className="
+                                                text-sm
+                                                text-gray-500
+                                            ">
+                                                Starting from
+                                            </p>
+
+                                            <p className="
+                                                text-3xl
+                                                font-bold
+                                                text-gray-900
+                                            ">
+
+                                                ₹{pod.hourlyPrice}
+
+                                                <span className="
+                                                    ml-1
+                                                    text-sm
+                                                    font-normal
+                                                    text-gray-500
+                                                ">
+                                                    /hour
+                                                </span>
+
+                                            </p>
+
+                                            <p className="
+                                                mt-1
+                                                text-sm
+                                                text-gray-500
+                                            ">
+
+                                                ₹{pod.dayPrice} / day
+
+                                            </p>
+
+                                        </div>
+
+
+                                        {/* BUTTONS */}
+
+                                        <div className="
+                                            flex
+                                            w-full
+                                            flex-col
+                                            gap-3
+                                            sm:w-auto
+                                            sm:flex-row
+                                        ">
+
+                                            <button
+                                                onClick={() =>
+                                                    setSelectedPod(
+                                                        pod
+                                                    )
+                                                }
+                                                className="
+                                                    rounded-xl
+                                                    border-2
+                                                    border-gray-300
+                                                    px-6
+                                                    py-3
+                                                    font-semibold
+                                                    text-gray-800
+                                                    transition
+                                                    hover:border-black
+                                                "
+                                            >
+
+                                                View Details
+
+                                            </button>
+
+
+                                            <button
+                                                onClick={() =>
+                                                    alert(
+                                                        `Booking ${pod.podName}`
+                                                    )
+                                                }
+                                                className="
+                                                    rounded-xl
+                                                    bg-green-500
+                                                    px-6
+                                                    py-3
+                                                    font-semibold
+                                                    text-white
+                                                    transition
+                                                    hover:bg-green-600
+                                                "
+                                            >
+
+                                                Book Now
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    ))}
+
+                </div>
+
+            </div>
+
+
+            {/* ================================= */}
+            {/* DETAILS MODAL */}
+            {/* ================================= */}
+
+            {selectedPod && (
+
+                <div className="
+                    fixed
+                    inset-0
+                    z-50
+                    flex
+                    items-center
+                    justify-center
+                    bg-black/70
+                    p-4
+                    backdrop-blur-sm
+                ">
+
+                    <div className="
+                        relative
+                        max-h-[90vh]
+                        w-full
+                        max-w-3xl
+                        overflow-y-auto
+                        rounded-3xl
+                        bg-white
+                        shadow-2xl
+                    ">
+
+
+                        {/* CLOSE */}
+
+                        <button
+                            onClick={() =>
+                                setSelectedPod(null)
+                            }
+                            className="
+                                absolute
+                                right-4
+                                top-4
+                                z-10
+                                flex
+                                h-10
+                                w-10
+                                items-center
+                                justify-center
+                                rounded-full
+                                bg-black/70
+                                text-white
+                            "
+                        >
+
+                            <X />
+
+                        </button>
+
+
+                        {/* IMAGE */}
+
+                        <img
+                            src={
+                                selectedPod.images?.[0] ||
+                                "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop"
+                            }
+                            alt={selectedPod.podName}
+                            className="
+                                h-64
+                                w-full
+                                object-cover
+                            "
+                        />
+
+
+                        {/* MODAL CONTENT */}
+
+                        <div className="p-6 sm:p-8">
+
+                            <h2 className="
+                                text-3xl
+                                font-bold
+                                text-gray-900
+                            ">
+
+                                {selectedPod.podName}
+
+                            </h2>
+
+
+                            <p className="
+                                mt-2
+                                text-gray-500
+                            ">
+
+                                {selectedPod.location}
+
+                            </p>
+
+
+                            <p className="
+                                mt-6
+                                leading-7
+                                text-gray-600
+                            ">
+
+                                {selectedPod.description}
+
+                            </p>
+
+
+                            {/* AMENITIES */}
+
+                            <h3 className="
+                                mt-7
+                                text-xl
+                                font-bold
+                                text-gray-900
+                            ">
+
+                                Amenities
+
+                            </h3>
+
+
+                            <div className="
+                                mt-4
+                                flex
+                                flex-wrap
+                                gap-2
+                            ">
+
+                                {selectedPod.amenities?.map(
+                                    (amenity, index) => (
+
+                                        <span
+                                            key={index}
+                                            className="
+                                                rounded-full
+                                                bg-gray-100
+                                                px-4
+                                                py-2
+                                                text-sm
+                                                text-gray-700
+                                            "
+                                        >
+
+                                            {amenity}
+
+                                        </span>
+
+                                    )
+                                )}
+
+                            </div>
+
+
+                            {/* PRICING */}
+
+                            <div className="
+                                mt-8
+                                grid
+                                gap-4
+                                sm:grid-cols-2
+                            ">
+
+                                <div className="
+                                    rounded-2xl
+                                    bg-gray-100
+                                    p-5
+                                ">
+
+                                    <p className="
+                                        text-sm
+                                        text-gray-500
+                                    ">
+                                        Hourly
+                                    </p>
+
+                                    <p className="
+                                        mt-1
+                                        text-2xl
+                                        font-bold
+                                    ">
+
+                                        ₹{selectedPod.hourlyPrice}
+
+                                    </p>
+
+                                </div>
+
+
+                                <div className="
+                                    rounded-2xl
+                                    bg-gray-100
+                                    p-5
+                                ">
+
+                                    <p className="
+                                        text-sm
+                                        text-gray-500
+                                    ">
+                                        Daily
+                                    </p>
+
+                                    <p className="
+                                        mt-1
+                                        text-2xl
+                                        font-bold
+                                    ">
+
+                                        ₹{selectedPod.dayPrice}
+
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <button
+                                onClick={() => {
+
+                                    setSelectedPod(null);
+
+                                    alert(
+                                        `Booking ${selectedPod.podName}`
+                                    );
+
+                                }}
+                                className="
+                                    mt-8
+                                    w-full
+                                    rounded-xl
+                                    bg-green-500
+                                    py-4
+                                    font-bold
+                                    text-white
+                                    transition
+                                    hover:bg-green-600
+                                "
+                            >
+
+                                Book This Pod
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            )}
+
+        </div>
+
+    );
+
+};
+
+
+export default SearchPods;
+
+4. Pages--> 
+a.AboutUs.jsx:
+
+import React from 'react'
+
+const AboutUs = () => {
+  return (
+    <>
+    <div className=' bg-gradient-to-r from-[#030912] via-[#0b1e3c] to-[#0d1b31]'>
+      <div className='text-4xl py-4 px-2 font-bold font-bungee  text-center text-white'>
+      Our Story</div>
+      <div className='p-4  flex flex-col sm:flex-row justify-center gap-40 items-center'>
+        <div className='flex items-center '>
+        <img src="https://images.pexels.com/photos/37290569/pexels-photo-37290569.jpeg" 
+        className= 'h-70 w-80 object-cover '
+        /></div>
+        <div className='md:px-4 sm:space-y-2 border-0 shadow-md text-white font-serif'>
+          <h3 className='text-md md:text-xl font-bungee font-bold mb-2 text-blue-400  '>Rest Should Be Simple. Not Expensive.</h3>
+          <h3 className='text-sm md:text-md tracking-tighter mb-4'>Why pay ₹1500+ for a hotel when you only need a few hours of rest?<br/>
+At Restify, we rethink comfort for modern life—offering private, smart sleeping pods starting at just ₹139/hour. </h3>
+            <h3 className='text-md md:text-xl font-bungee font-semibold mb-2 text-blue-400'> Restify was born from that gap..</h3>
+            <h3 className='text-sm md:text-md font-serif mt-4 '>
+              Designed for flexibility, built for comfort, and powered by seamless online booking,<br/> Restify gives you the freedom to pause, recharge, and continue—on your terms.<br/>
+Step into a space that’s quiet, personal, and tailored entirely for you—where every moment of rest truly counts.
+            </h3>
+        </div>
+         </div>
+        <div>
+            <h1 className='text-4xl mb-10 text-center font-bungee font-bold text-blue-400 '>
+              Our Core Values
+            </h1>
+         <div className='flex items-center justify-between flex-col md:flex-row  gap-15 py-10 px-4 md:px-40'> 
+            <div className=''>
+              <img src="https://images.pexels.com/photos/5137981/pexels-photo-5137981.jpeg" alt="" 
+              className='h-30 w-55 object-cover'/>
+              <h1 className='text-xl md:text-2xl text-center  font-bold text-white font-bungee py-2'>
+                <span className='text-blue-400'>Brand </span>Value</h1>
+              <h3 className='text-sm text-md text-white font-serif tracking-tighter w-50 p-1 mt-0 text-center'>One of the Finest Beds 
+                with perfect sleep </h3>
+            </div>
+              <div className=''>
+              <img src="https://images.pexels.com/photos/37290569/pexels-photo-37290569.jpeg" alt="" 
+              className='h-30 w-55 object-cover'/>
+              <h1 className='text-xl md:text-2xl text-center font-bold text-white font-bungee py-2'>Premium Ambiance</h1>
+              <h3 className='text-sm md:text-md text-white font-serif tracking-tighter text-center p-1 '>With full ac support</h3>
+            </div>
+              <div className=''>
+              <img src="https://images.pexels.com/photos/12913382/pexels-photo-12913382.jpeg" alt="" 
+              className='h-30 w-55 object-cover'/>
+              <h1 className='text-xl md:text-2xl text-center font-bold text-white font-bungee py-2'>Comfort Guarantee</h1>
+              <h3 className='text-sm md:text-md text-white font-serif tracking-tighter p-1 text-center'>100% Finest Service</h3>
+            </div>
+          </div>
+      </div>
+</div>
+    </>
+  )
+}
+
+export default AboutUs
+
+b.AdminDashboard.jsx:
+
+import React from "react";
+import PodManagement from "../Pods/PodManagement";
+
+const AdminDashboard = () => {
+    return <PodManagement />;
+};
+
+export default AdminDashboard;
+
+c.Home.jsx:
+
+import React from 'react'
+import Hero from '../Layout/Hero'
+import OurPods from '../Pods/OurPods'
+
+const Home = () => {
+  return (
+    <>
+     <Hero/>
+     <OurPods/>
+    </>
+  )
+}
+export default Home
+
+
+d.Login.jsx:
+
+import React, { useState } from 'react';
+import AuthLayout from '../Layout/AuthLayout';
+import { useNavigate } from 'react-router-dom';
+import API from "../../api/axios";
+
+const Login = ({ switchToRegister }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+ const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+        const response = await API.post("/users/login", {
+            email,
+            password,
+        });
+
+        const user = response.data;
+
+        localStorage.setItem("token", user.token);
+
+        localStorage.setItem(
+            "user",
+            JSON.stringify({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+            })
+        );
+
+        navigate("/profileUser");
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            error.response?.data?.message ||
+            "Login failed"
+        );
+    }
+};
+
+  return (
+    <AuthLayout
+      title="Welcome Back!"
+      subtitle="Sign in to account"
+      isLogin={true}
+      illustrationText="Discover powerful tools to manage your daily tasks and scale your ideas effortlessly."
+    >
+      <p className="mt-2 text-sm text-slate-500">
+        Don't have an account?{' '}
+        <button
+  type="button"
+  onClick={() => navigate('/register')}
+  className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors focus:outline-none focus:underline"
+>
+  Register here
+</button>
+      </p>
+
+      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+            Email address
+          </label>
+          <div className="mt-1">
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            />
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between">
+            <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+              Password
+            </label>
+            <a href="#" className="text-xs font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">
+              Forgot password?
+            </a>
+          </div>
+          <div className="mt-1">
+            <input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center">
+          <input
+            id="remember-me"
+            type="checkbox"
+            className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-600">
+            Remember me
+          </label>
+        </div>
+
+        <div>
+          <button
+            type="submit"
+            className="flex w-full justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-md hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slate-900 transition-all active:scale-[0.98]"
+          >
+            Sign in
+          </button>
+        </div>
+      </form>
+    </AuthLayout>
+  );
+};
+
+export default Login;
+
+
+e.OwnerDashboard.jsx:
+
+import React from "react";
+import PodManagement from "../Pods/PodManagement";
+
+const OwnerDashboard = () => {
+    return <PodManagement />;
+};
+
+export default OwnerDashboard;
+
+
+f.ProfileLogIn.jsx:
+
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/authContext";
+
+const ProfileLogIn = () => {
+
+    const navigate = useNavigate();
+
+    const {
+        user,
+        logout,
+        loading
+    } = useAuth();
+
+
+    // -----------------------------
+    // LOADING
+    // -----------------------------
+
+    if (loading) {
+
+        return (
+            <section className="
+                min-h-screen
+                bg-slate-950
+                flex
+                items-center
+                justify-center
+                px-4
+            ">
+
+                <p className="text-white text-lg">
+                    Loading profile...
+                </p>
+
+            </section>
+        );
+    }
+
+
+    // -----------------------------
+    // NOT LOGGED IN
+    // -----------------------------
+
+    if (!user) {
+
+        return (
+            <section className="
+                min-h-screen
+                bg-slate-950
+                flex
+                items-center
+                justify-center
+                px-4
+            ">
+
+                <div className="
+                    w-full
+                    max-w-md
+                    bg-slate-900
+                    border
+                    border-slate-800
+                    rounded-3xl
+                    p-8
+                    text-center
+                ">
+
+                    <h1 className="
+                        text-3xl
+                        font-bold
+                        text-white
+                    ">
+                        Login Required
+                    </h1>
+
+                    <p className="
+                        text-slate-400
+                        mt-3
+                    ">
+                        Please login to view your profile.
+                    </p>
+
+
+                    <button
+                        onClick={() => navigate("/login")}
+                        className="
+                            mt-6
+                            w-full
+                            bg-blue-600
+                            hover:bg-blue-500
+                            text-white
+                            py-3
+                            rounded-xl
+                            font-semibold
+                            transition
+                        "
+                    >
+                        Login
+                    </button>
+
+                </div>
+
+            </section>
+        );
+    }
+
+
+    // -----------------------------
+    // LOGGED-IN USER
+    // -----------------------------
+
+    return (
+
+        <section className="
+            min-h-screen
+            bg-slate-950
+            flex
+            items-center
+            justify-center
+            px-4
+            py-10
+        ">
+
+            <div className="
+                w-full
+                max-w-5xl
+            ">
+
+
+                {/* HEADING */}
+
+                <div className="mb-8">
+
+                    <p className="
+                        text-blue-400
+                        text-sm
+                        font-medium
+                        tracking-wide
+                    ">
+                        MY PROFILE
+                    </p>
+
+
+                    <h1 className="
+                        text-3xl
+                        md:text-4xl
+                        font-bold
+                        text-white
+                        mt-2
+                    ">
+                        Welcome back, {user.name}
+                    </h1>
+
+                </div>
+
+
+                {/* PROFILE CARD */}
+
+                <div className="
+                    bg-slate-900
+                    border
+                    border-slate-800
+                    rounded-3xl
+                    overflow-hidden
+                    shadow-2xl
+                ">
+
+
+                    <div className="
+                        grid
+                        grid-cols-1
+                        md:grid-cols-2
+                    ">
+
+
+                        {/* ================================= */}
+                        {/* LEFT SIDE */}
+                        {/* ================================= */}
+
+                        <div className="
+                            p-8
+                            md:p-10
+                        ">
+
+
+                            {/* USER INFORMATION */}
+
+                            <div className="
+                                flex
+                                items-center
+                                gap-5
+                            ">
+
+
+                                {/* PROFILE IMAGE */}
+
+                                <div className="
+                                    w-20
+                                    h-20
+                                    md:w-24
+                                    md:h-24
+                                    rounded-full
+                                    bg-blue-600
+                                    flex
+                                    items-center
+                                    justify-center
+                                    border-4
+                                    border-slate-800
+                                    shadow-lg
+                                    shrink-0
+                                ">
+
+                                    <span className="
+                                        text-3xl
+                                        md:text-4xl
+                                        font-bold
+                                        text-white
+                                    ">
+
+                                        {user.name
+                                            ?.charAt(0)
+                                            ?.toUpperCase()
+                                        }
+
+                                    </span>
+
+                                </div>
+
+
+                                {/* USER DETAILS */}
+
+                                <div className="min-w-0">
+
+                                    <p className="
+                                        text-slate-400
+                                        text-sm
+                                    ">
+                                        Account
+                                    </p>
+
+
+                                    <h2 className="
+                                        text-xl
+                                        md:text-2xl
+                                        font-semibold
+                                        text-white
+                                        mt-1
+                                        break-words
+                                    ">
+
+                                        {user.name}
+
+                                    </h2>
+
+
+                                    <p className="
+                                        text-slate-400
+                                        text-sm
+                                        md:text-base
+                                        mt-1
+                                        break-all
+                                    ">
+
+                                        {user.email}
+
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            {/* DIVIDER */}
+
+                            <div className="
+                                h-px
+                                bg-slate-800
+                                my-8
+                            "></div>
+
+
+                            {/* ACCOUNT INFORMATION */}
+
+                            <div className="space-y-5">
+
+
+                                {/* ROLE */}
+
+                                <div>
+
+                                    <p className="
+                                        text-slate-500
+                                        text-xs
+                                        uppercase
+                                        tracking-wider
+                                    ">
+                                        Account Type
+                                    </p>
+
+
+                                    <p className="
+                                        text-white
+                                        mt-2
+                                        capitalize
+                                        font-medium
+                                    ">
+
+                                        {user.role}
+
+                                    </p>
+
+                                </div>
+
+
+                                {/* EMAIL */}
+
+                                <div>
+
+                                    <p className="
+                                        text-slate-500
+                                        text-xs
+                                        uppercase
+                                        tracking-wider
+                                    ">
+                                        Email Address
+                                    </p>
+
+
+                                    <p className="
+                                        text-white
+                                        mt-2
+                                        break-all
+                                    ">
+
+                                        {user.email}
+
+                                    </p>
+
+                                </div>
+
+
+                                {/* USER ID */}
+
+                                <div>
+
+                                    <p className="
+                                        text-slate-500
+                                        text-xs
+                                        uppercase
+                                        tracking-wider
+                                    ">
+                                        User ID
+                                    </p>
+
+
+                                    <p className="
+                                        text-slate-400
+                                        mt-2
+                                        text-sm
+                                        break-all
+                                    ">
+
+                                        {user._id}
+
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            {/* LOGOUT */}
+
+                            <button
+                                onClick={() => {
+
+                                    logout();
+
+                                    navigate("/login");
+
+                                }}
+                                className="
+                                    mt-8
+                                    w-full
+                                    border
+                                    border-red-500/40
+                                    text-red-400
+                                    hover:bg-red-500/10
+                                    py-3
+                                    rounded-xl
+                                    font-semibold
+                                    transition
+                                "
+                            >
+
+                                Logout
+
+                            </button>
+
+                        </div>
+
+
+                        {/* ================================= */}
+                        {/* RIGHT SIDE */}
+                        {/* ================================= */}
+
+                        <div className="
+                            relative
+                            p-8
+                            md:p-10
+                            bg-gradient-to-br
+                            from-blue-950
+                            via-slate-900
+                            to-slate-950
+                            flex
+                            items-center
+                        ">
+
+
+                            {/* DECORATIVE CIRCLE */}
+
+                            <div className="
+                                absolute
+                                -top-20
+                                -right-20
+                                w-52
+                                h-52
+                                bg-blue-500/10
+                                rounded-full
+                                blur-2xl
+                            "></div>
+
+
+                            <div className="relative">
+
+                                <span className="
+                                    inline-block
+                                    px-3
+                                    py-1
+                                    rounded-full
+                                    bg-blue-500/10
+                                    border
+                                    border-blue-400/20
+                                    text-blue-400
+                                    text-xs
+                                    font-medium
+                                    mb-5
+                                ">
+
+                                    THE FUTURE OF REST
+
+                                </span>
+
+
+                                <h2 className="
+                                    text-2xl
+                                    md:text-3xl
+                                    font-bold
+                                    text-white
+                                    leading-tight
+                                ">
+
+                                    Rest better.
+                                    <br />
+
+                                    Live better.
+                                    <br />
+
+                                    <span className="
+                                        text-blue-400
+                                    ">
+
+                                        Anywhere, anytime.
+
+                                    </span>
+
+                                </h2>
+
+
+                                <p className="
+                                    text-slate-400
+                                    mt-5
+                                    leading-relaxed
+                                    max-w-md
+                                ">
+
+                                    Restify is building a smarter
+                                    way to rest by giving you
+                                    comfortable spaces exactly
+                                    when you need them.
+
+                                </p>
+
+
+                                {/* CUSTOMER BUTTON */}
+
+                                {user.role === "customer" && (
+
+                                    <button
+                                        onClick={() =>
+                                            navigate("/pods")
+                                        }
+                                        className="
+                                            mt-7
+                                            px-5
+                                            py-3
+                                            bg-blue-600
+                                            hover:bg-blue-500
+                                            text-white
+                                            rounded-xl
+                                            font-medium
+                                            transition
+                                        "
+                                    >
+
+                                        Explore Pods
+
+                                    </button>
+
+                                )}
+
+
+                                {/* OWNER BUTTON */}
+
+                                {user.role === "owner" && (
+
+                                    <button
+                                        onClick={() =>
+                                            navigate("/owner/dashboard")
+                                        }
+                                        className="
+                                            mt-7
+                                            px-5
+                                            py-3
+                                            bg-blue-600
+                                            hover:bg-blue-500
+                                            text-white
+                                            rounded-xl
+                                            font-medium
+                                            transition
+                                        "
+                                    >
+
+                                        Owner Dashboard
+
+                                    </button>
+
+                                )}
+
+
+                                {/* ADMIN BUTTON */}
+
+                                {user.role === "admin" && (
+
+                                    <button
+                                        onClick={() =>
+                                            navigate("/admin/dashboard")
+                                        }
+                                        className="
+                                            mt-7
+                                            px-5
+                                            py-3
+                                            bg-blue-600
+                                            hover:bg-blue-500
+                                            text-white
+                                            rounded-xl
+                                            font-medium
+                                            transition
+                                        "
+                                    >
+
+                                        Admin Dashboard
+
+                                    </button>
+
+                                )}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    );
+
+};
+
+
+export default ProfileLogIn;
+
+
+g.ProfileUser.jsx:
+
+import React from 'react'
+
+    const bookings = [
+    {
+      id: 1,
+      podName: "Restify Premium Pod",
+      address: "MG Road, Bengaluru",
+      date: "18 Aug 2026",
+      startTime: "10:00 AM",
+      endTime: "02:00 PM",
+      status: "Confirmed",
+    },
+    {
+      id: 2,
+      podName: "Restify Comfort Pod",
+      address: "Indiranagar, Bengaluru",
+      date: "22 Aug 2026",
+      startTime: "06:00 PM",
+      endTime: "10:00 PM",
+      status: "Confirmed",
+    },
+    {
+      id: 3,
+      podName: "Restify Premium Pod",
+      address: "Koramangala, Bengaluru",
+      date: "28 Aug 2026",
+      startTime: "09:00 AM",
+      endTime: "01:00 PM",
+      status: "Confirmed",
+    },
+  ];
+const ProfileUser =  ()=> {
+
+  return (
+    <section className="w-full px-4 py-10">
+      <div className="max-w-6xl mx-auto">
+
+        {/* Heading */}
+        <div className="mb-8">
+          <p className="text-blue-400 text-sm font-medium tracking-wider">
+            MY BOOKINGS
+          </p>
+
+          <h2 className="text-3xl md:text-4xl font-bold text-white mt-2">
+            Your Restify bookings
+          </h2>
+
+          <p className="text-slate-400 mt-2">
+            View and manage your confirmed Restify stays.
+          </p>
+        </div>
+
+        {/* Booking Card */}
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+
+          {/* Card Header */}
+          <div className="px-6 md:px-8 py-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+            <div>
+              <h3 className="text-lg font-semibold text-white">
+                Confirmed bookings
+              </h3>
+
+              <p className="text-sm text-slate-500 mt-1">
+                Your upcoming Restify reservations
+              </p>
+            </div>
+
+            {/* Booking Count */}
+            <div className="w-fit px-4 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
+              <span className="text-blue-400 text-sm font-medium">
+                {bookings.length} Bookings
+              </span>
+            </div>
+
+          </div>
+
+          {/* Booking Table */}
+          <div className="overflow-x-auto">
+
+            <table className="w-full min-w-[800px]">
+
+              {/* Table Header */}
+              <thead>
+                <tr className="border-b border-slate-800 text-left">
+
+                  <th className="px-6 md:px-8 py-4 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Pod
+                  </th>
+
+                  <th className="px-6 py-4 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Address
+                  </th>
+
+                  <th className="px-6 py-4 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Date
+                  </th>
+
+                  <th className="px-6 py-4 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Time
+                  </th>
+
+                  <th className="px-6 md:px-8 py-4 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Status
+                  </th>
+
+                </tr>
+              </thead>
+
+              {/* Table Body */}
+              <tbody>
+
+                {bookings.map((booking) => (
+
+                  <tr
+                    key={booking.id}
+                    className="border-b border-slate-800/70 hover:bg-slate-800/40 transition duration-200"
+                  >
+
+                    {/* Pod */}
+                    <td className="px-6 md:px-8 py-5">
+
+                      <div className="flex items-center gap-3">
+
+                        {/* Pod Icon */}
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-lg">
+                          🛏️
+                        </div>
+
+                        {/* Pod Name */}
+                        <div>
+                          <p className="text-white font-medium">
+                            {booking.podName}
+                          </p>
+
+                          <p className="text-xs text-slate-500 mt-1">
+                            Restify Pod
+                          </p>
+                        </div>
+
+                      </div>
+
+                    </td>
+
+                    {/* Address */}
+                    <td className="px-6 py-5">
+
+                      <p className="text-slate-300 text-sm max-w-xs">
+                        {booking.address}
+                      </p>
+
+                    </td>
+
+                    {/* Date */}
+                    <td className="px-6 py-5">
+
+                      <p className="text-slate-300 text-sm whitespace-nowrap">
+                        {booking.date}
+                      </p>
+
+                    </td>
+
+                    {/* Time */}
+                    <td className="px-6 py-5">
+
+                      <div>
+                        <p className="text-white text-sm font-medium whitespace-nowrap">
+                          {booking.startTime}
+                        </p>
+
+                        <p className="text-slate-500 text-xs mt-1 whitespace-nowrap">
+                          to {booking.endTime}
+                        </p>
+                      </div>
+
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-6 md:px-8 py-5">
+
+                      <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+
+                        {booking.status}
+
+                      </span>
+
+                    </td>
+
+                  </tr>
+
+                ))}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+  )
+}
+
+export default ProfileUser
+
+
+h.Register.jsx:
+
+import React, { useState } from 'react';
+import API from "../../api/axios";
+import AuthLayout from '../Layout/AuthLayout';
+import { useNavigate } from 'react-router-dom';
+const Register = ({ switchToLogin }) => {
+  const [formData, setFormData] = useState({
+              name: '',
+            email: '',
+             password: '',
+            confirmPassword: '',
+           agreeTerms: false,
+
+  });
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   if (formData.password !== formData.confirmPassword) {
+  //     alert("Passwords don't match!");
+  //     return;
+  //   }
+  //   console.log('Registering account with:', formData);
+  //   // Connect your AuthContext registration action here later
+  // };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (formData.password !== formData.confirmPassword) {
+        alert("Passwords don't match!");
+        return;
+    }
+
+    try {
+        const response = await API.post("/users/register", {
+             name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            role: "customer",
+        });
+
+        console.log(response.data);
+
+        alert("Registration successful!");
+
+        navigate("/login");
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            error.response?.data?.message ||
+            "Registration failed"
+        );
+    }
+};
+
+  return (
+    <AuthLayout
+      title="Start Your Jouney With Restify"
+      subtitle="Create your account"
+      isLogin={false}
+      illustrationText=" Step into a world of comfort, privacy, and
+       luxury sleep pods designed for your perfect
+       rest. Create your account and begin your
+       peaceful journey with Restify."
+    >
+      <p className="mt-2 text-sm text-slate-500">
+        Already have an account?{' '}
+        <button
+  type="button"
+  onClick={() => navigate('/login')}
+  className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors focus:outline-none focus:underline"
+>
+  Log in here
+</button>
+      </p>
+
+      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-slate-700">
+            Full Name
+          </label>
+          <div className="mt-1">
+            <input
+              id="name"
+              name="name"
+              type="text"
+              required
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="John Doe"
+              className="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+            Email address
+          </label>
+          <div className="mt-1">
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="you@example.com"
+              className="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+            Password
+          </label>
+          <div className="mt-1">
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="••••••••"
+              className="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700">
+            Confirm Password
+          </label>
+          <div className="mt-1">
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              required
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="••••••••"
+              className="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-start">
+          <div className="flex h-5 items-center">
+            <input
+              id="agreeTerms"
+              name="agreeTerms"
+              type="checkbox"
+              required
+              checked={formData.agreeTerms}
+              onChange={handleChange}
+              className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            />
+          </div>
+          <div className="ml-2 text-sm">
+            <label htmlFor="agreeTerms" className="text-slate-600">
+              I agree to the{' '}
+              <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500">Terms of Service</a> and{' '}
+              <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500">Privacy Policy</a>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <button
+            type="submit"
+            className="flex w-full justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-md hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slate-900 transition-all active:scale-[0.98]"
+          >
+            Create account
+          </button>
+        </div>
+      </form>
+    </AuthLayout>
+  );
+};
+
+export default Register;
+
+5.context -->
+a. SearchContext.jsx:
+
+// context/SearchContext.jsx
+import React, { createContext, useState, useContext } from 'react';
+
+const SearchContext = createContext();
+
+export function SearchProvider({ children }) {
+  // Backend-friendly state structure initialization
+  const [searchCriteria, setSearchCriteria] = useState({
+    state: '',
+    city: '',
+    date: '',
+    time: ''
+  });
+// const [searchCriteria, setSearchCriteria] = useState({
+//   state: 'California',
+//   city: 'Los Angeles',
+//   date: '2026-05-20',
+//   time: '14:00'
+// });
+
+  // Helper function to clear search after booking completion
+  const clearSearch = () => {
+    setSearchCriteria({ state: '', city: '', date: '', time: '' });
+  };
+
+  return (
+    <SearchContext.Provider value={{ searchCriteria, setSearchCriteria, clearSearch }}>
+      {children}
+    </SearchContext.Provider>
+  );
+}
+
+export function useSearch() {
+  const context = useContext(SearchContext);
+  if (!context) {
+    throw new Error('useSearch must be used within a SearchProvider');
+  }
+  return context;
+}
+
+b. authContext.jsx:
+
+import React, {
+    createContext,
+    useContext,
+    useEffect,
+    useState
+} from "react";
+
+import API from "../api/axios";
+
+const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            setLoading(false);
+            return;
+        }
+
+        const loadUser = async () => {
+
+            try {
+
+                const response = await API.get("/users/profile");
+
+                setUser(response.data);
+
+            } catch (error) {
+
+                console.error("Authentication failed:", error);
+
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+
+                setUser(null);
+
+            } finally {
+
+                setLoading(false);
+
+            }
+        };
+
+        loadUser();
+
+    }, []);
+
+    const login = async (email, password) => {
+
+        const response = await API.post("/users/login", {
+            email,
+            password
+        });
+
+        const userData = response.data;
+
+        localStorage.setItem("token", userData.token);
+
+        localStorage.setItem(
+            "user",
+            JSON.stringify({
+                _id: userData._id,
+                name: userData.name,
+                email: userData.email,
+                role: userData.role
+            })
+        );
+
+        setUser({
+            _id: userData._id,
+            name: userData.name,
+            email: userData.email,
+            role: userData.role
+        });
+
+        return userData;
+    };
+
+    const logout = () => {
+
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+
+        setUser(null);
+
+    };
+
+    return (
+        <AuthContext.Provider
+            value={{
+                user,
+                setUser,
+                login,
+                logout,
+                loading,
+                isAuthenticated: !!user
+            }}
+        >
+            {children}
+        </AuthContext.Provider>
+    );
+};
+
+export const useAuth = () => {
+
+    const context = useContext(AuthContext);
+
+    if (!context) {
+        throw new Error(
+            "useAuth must be used inside AuthProvider"
+        );
+    }
+
+    return context;
+};
+
+6.Utils -->
+a. cn.js:
+export function cn(...classes) {
+  return classes.filter(Boolean).join(' ');
+}
+
+7.App.jsx--> 
+
+import React from "react"
+import {BrowserRouter, Route,Routes} from "react-router-dom";
+import { SearchProvider } from "./context/SearchContext";
+import UserLayout from "./components/Layout/UserLayout";
+import ProfileUser from "./components/pages/ProfileUser";
+import Home from "./components/pages/Home";
+import AboutUs from "./components/pages/AboutUs";
+import OurPods from "./components/Pods/OurPods";
+import SearchPods from "./components/Pods/SearchPods";
+import ProfileLogIn from "./components/pages/ProfileLogIn"
+import Login from "./components/pages/Login";
+import Register from "./components/pages/Register";
+import RoleRoute from "./components/Layout/RoleRoute";
+import OwnerDashboard from "./components/pages/OwnerDashboard";
+import AdminDashboard from "./components/pages/AdminDashboard";
+function App() {
+  return (
+    <SearchProvider>
+   <BrowserRouter>
+    <Routes>
+     <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />  
+      <Route path="/" element={<UserLayout/>}>
+       <Route index element={<Home/>}/>
+      <Route path="about" element={<AboutUs/>}/> 
+        <Route path="pods" element={<OurPods/>}/>
+        <Route path="searchpods" element={<SearchPods/>}/> 
+        <Route path="profile" element={<ProfileLogIn/>}/>
+        <Route path="profileUser" element={<ProfileUser/>}/> 
+         <Route element={
+                        <RoleRoute
+                            allowedRoles={["owner"]}
+                        />
+                    }>
+
+                        <Route
+                            path="/owner/dashboard"
+                            element={<OwnerDashboard />}
+                        />
+
+                    </Route>
+
+
+                    {/* ADMIN */}
+
+                    <Route element={
+                        <RoleRoute
+                            allowedRoles={["admin"]}
+                        />
+                    }>
+
+                        <Route
+                            path="/admin/dashboard"
+                            element={<AdminDashboard />}
+                        />
+
+                    </Route>  
+      </Route>    
+    </Routes>
+   </BrowserRouter>
+   </SearchProvider>
+  )
+}
+
+export default App
+
+8.Main.jsx--> 
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import App from './App'
+import './index.css'
+import { AuthProvider } from './context/authContext'
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+        <AuthProvider>
+            <App />
+        </AuthProvider>
+  </StrictMode>,
+)

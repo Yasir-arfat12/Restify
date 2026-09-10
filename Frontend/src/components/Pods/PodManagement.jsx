@@ -116,105 +116,59 @@ const PodManagement = () => {
         }));
     };
 
-    const handleSubmit = async (e) => {
+   const handleSubmit = async (event) => {
+  event.preventDefault();
 
-        e.preventDefault();
+  setError("");
+  setSuccess("");
 
-        setError("");
-        setSuccess("");
+  if (
+    !formData.podName.trim() ||
+    !formData.description.trim() ||
+    !formData.location.trim() ||
+    !formData.city.trim() ||
+    !formData.state.trim() ||
+    !formData.hourlyPrice ||
+    !formData.dayPrice
+  ) {
+    setError("Please fill all required fields.");
+    return;
+  }
 
-        if (
-            !formData.podName ||
-            !formData.description ||
-            !formData.location ||
-            !formData.city ||
-            !formData.state ||
-            !formData.hourlyPrice ||
-            !formData.dayPrice
-        ) {
+  try {
+    setLoading(true);
 
-            setError(
-                "Please fill all required fields."
-            );
-
-            return;
-        }
-
-        try {
-
-            setLoading(true);
-
-            const payload = {
-
-                podName: formData.podName.trim(),
-
-                description:
-                    formData.description.trim(),
-
-                location:
-                    formData.location.trim(),
-
-                city:
-                    formData.city.trim(),
-
-                state:
-                    formData.state.trim(),
-
-                hourlyPrice:
-                    Number(formData.hourlyPrice),
-
-                dayPrice:
-                    Number(formData.dayPrice),
-
-                capacity:
-                    Number(formData.capacity),
-
-                amenities:
-                    formData.amenities,
-
-                images:
-                    formData.images
-
-            };
-
-            const response = await API.post(
-                "/pods/create-pod",
-                payload
-            );
-
-            console.log(
-                "Created pod:",
-                response.data
-            );
-
-            setSuccess(
-                "Pod created successfully!"
-            );
-
-            setFormData(initialForm);
-
-            setTimeout(() => {
-
-                navigate("/pods");
-
-            }, 1000);
-
-        } catch (error) {
-
-            console.error(error);
-
-            setError(
-                error.response?.data?.message ||
-                "Unable to create pod."
-            );
-
-        } finally {
-
-            setLoading(false);
-
-        }
+    const payload = {
+      podName: formData.podName.trim(),
+      description: formData.description.trim(),
+      location: formData.location.trim(),
+      city: formData.city.trim(),
+      state: formData.state.trim(),
+      hourlyPrice: Number(formData.hourlyPrice),
+      dayPrice: Number(formData.dayPrice),
+      capacity: Number(formData.capacity) || 1,
+      amenities: formData.amenities,
+      images: formData.images
     };
 
+    await API.post("/pods", payload);
+
+    setSuccess("Pod submitted successfully.");
+
+    setFormData(initialForm);
+    setAmenityInput("");
+    setImageInput("");
+  } catch (error) {
+    console.error("Unable to create pod:", error);
+
+    setError(
+      error.response?.data?.message ||
+        "Unable to submit pod. Please try again."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
     return (
         <section className="min-h-screen bg-slate-950 px-4 py-10 sm:px-6 lg:px-8">
 
