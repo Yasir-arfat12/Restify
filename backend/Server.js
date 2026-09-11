@@ -3,10 +3,12 @@ const cors = require("cors");
 const dotenv = require("dotenv")
 const jwt = require("jsonwebtoken");
 const connectDB = require("./config/db")
-const BookingRoutes = require("./routes/BookingManagementRoutes");
+const BookingRoutes = require("./routes/BookingRoutes");
+const BookingPodRoutes = require("./routes/BookPodRoutes");
 const UserRoutes  = require("./routes/UserRoutes")
-const BillRoutes = require("./routes/BillRoutes")
-const BookingPodRoutes = require("./routes/BookPodRoutes")
+const BillRoutes = require("./routes/BillRoutes");
+const BookingManagementRoutes = require("./routes/BookingManagementRoutes")
+
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -26,7 +28,7 @@ connectDB();
 app.use("/api/users",UserRoutes)
 app.use("/api/pods", BookingRoutes)
 app.use("/api/bill",BillRoutes)
-app.use("/api/bookings", BookingPodRoutes)
+app.use("/api/bookings",BookingManagementRoutes)
 console.log("server started")
 app.listen(PORT, ()=> {
     console.log("server running on", PORT);

@@ -115,8 +115,7 @@ const BookingModal = ({
 
 
             const response =
-                await API.post(
-                    "/bookings",
+                await API.post("/bookings",
                     {
                         podId: pod._id,
                         bookingDate,

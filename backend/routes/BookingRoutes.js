@@ -21,7 +21,7 @@ const {
 // =====================================================
 
 router.get(
-    "/pods/search",
+    "/search",
     searchPods
 );
 
