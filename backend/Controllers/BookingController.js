@@ -425,112 +425,6 @@ exports.getMyBookings = async (req, res) => {
 };
 
 
-
-// ====================================================
-// GET SINGLE BOOKING
-// ====================================================
-
-exports.getBookingById = async (req, res) => {
-
-    try {
-
-        const booking =
-            await Booking.findById(
-                req.params.id
-            )
-                .populate(
-                    "pod",
-                    "podName location city state hourlyPrice images"
-                )
-                .populate(
-                    "owner",
-                    "name email"
-                )
-                .populate(
-                    "customer",
-                    "name email"
-                );
-
-
-        if (!booking) {
-
-            return res.status(404).json({
-
-                success: false,
-
-                message: "Booking not found"
-
-            });
-
-        }
-
-
-        // ---------------------------------------------
-        // Security check
-        // ---------------------------------------------
-
-        const isCustomer =
-            booking.customer._id.toString() ===
-            req.user._id.toString();
-
-        const isOwner =
-            booking.owner._id.toString() ===
-            req.user._id.toString();
-
-        const isAdmin =
-            req.user.role === "admin";
-
-
-        if (
-            !isCustomer &&
-            !isOwner &&
-            !isAdmin
-        ) {
-
-            return res.status(403).json({
-
-                success: false,
-
-                message:
-                    "You are not authorized to view this booking"
-
-            });
-
-        }
-
-
-        return res.status(200).json({
-
-            success: true,
-
-            booking
-
-        });
-
-
-    } catch (error) {
-
-        console.error(
-            "Get Booking Error:",
-            error
-        );
-
-        return res.status(500).json({
-
-            success: false,
-
-            message:
-                "Unable to fetch booking",
-
-            error: error.message
-
-        });
-
-    }
-};
-
-
-
 // ====================================================
 // CANCEL BOOKING
 // ====================================================
@@ -674,5 +568,141 @@ exports.cancelBooking = async (req, res) => {
 
         });
 
+    }
+};
+
+// ====================================================
+// GET OWNER BOOKINGS
+// ====================================================
+
+exports.getOwnerBookings = async (req, res) => {
+    try {
+
+        // Only owners should use this endpoint
+        if (req.user.role !== "owner") {
+            return res.status(403).json({
+                success: false,
+                message: "Only owners can view owner bookings"
+            });
+        }
+
+        const bookings = await Booking.find({
+            owner: req.user._id
+        })
+            .populate(
+                "pod",
+                "podName location city state hourlyPrice images"
+            )
+            .populate(
+                "customer",
+                "name email"
+            )
+            .sort({
+                createdAt: -1
+            });
+
+        return res.status(200).json({
+            success: true,
+            count: bookings.length,
+            bookings
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Get Owner Bookings Error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to fetch owner bookings",
+            error: error.message
+        });
+    }
+};
+
+
+// ====================================================
+// GET OWNER EARNINGS
+// ====================================================
+
+exports.getOwnerEarnings = async (req, res) => {
+    try {
+
+        // Only owners should use this endpoint
+        if (req.user.role !== "owner") {
+            return res.status(403).json({
+                success: false,
+                message: "Only owners can view earnings"
+            });
+        }
+
+        const bookings = await Booking.find({
+            owner: req.user._id,
+            bookingStatus: {
+                $in: [
+                    "Pending",
+                    "Confirmed",
+                    "Completed"
+                ]
+            }
+        });
+
+        // ------------------------------------------------
+        // Calculate earnings
+        // ------------------------------------------------
+
+        const totalBookings = bookings.length;
+
+        const totalEarnings = bookings.reduce(
+            (total, booking) => {
+                return total + Number(
+                    booking.subtotal || 0
+                );
+            },
+            0
+        );
+
+        const completedBookings = bookings.filter(
+            booking =>
+                booking.bookingStatus === "Completed"
+        ).length;
+
+        const confirmedBookings = bookings.filter(
+            booking =>
+                booking.bookingStatus === "Confirmed"
+        ).length;
+
+        const pendingBookings = bookings.filter(
+            booking =>
+                booking.bookingStatus === "Pending"
+        ).length;
+
+
+        return res.status(200).json({
+            success: true,
+
+            earnings: {
+                totalEarnings,
+                totalBookings,
+                completedBookings,
+                confirmedBookings,
+                pendingBookings
+            }
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Get Owner Earnings Error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to fetch owner earnings",
+            error: error.message
+        });
     }
 };

@@ -8,7 +8,7 @@ const BookingPodRoutes = require("./routes/BookPodRoutes");
 const UserRoutes  = require("./routes/UserRoutes")
 const BillRoutes = require("./routes/BillRoutes");
 const BookingManagementRoutes = require("./routes/BookingManagementRoutes")
-
+const PartnerRoutes = require("./routes/PartnerRoutes");
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -29,6 +29,7 @@ app.use("/api/users",UserRoutes)
 app.use("/api/pods", BookingRoutes)
 app.use("/api/bill",BillRoutes)
 app.use("/api/bookings",BookingManagementRoutes)
+app.use("/api/partners",PartnerRoutes);
 console.log("server started")
 app.listen(PORT, ()=> {
     console.log("server running on", PORT);

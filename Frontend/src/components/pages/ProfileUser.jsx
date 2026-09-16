@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/authContext";
+import OwnerDashboard from "./OwnerDashboard";
 import API from "../../api/axios";
 
 function ProfileUser() {
@@ -13,7 +14,9 @@ function ProfileUser() {
         loading: authLoading
     } = useAuth();
 
-
+    if (user?.role === "owner") {
+    return <OwnerDashboard />;
+}
     // =====================================================
     // BOOKING STATE
     // =====================================================

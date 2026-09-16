@@ -9,7 +9,7 @@ import {
 
 import { SearchProvider } from "./context/SearchContext";
 import { AuthProvider, useAuth } from "./context/authContext";
-
+import PartnerApplications from "./components/pages/PartnerApplications";
 import PartnerApply from "./components/pages/PartnerApply";
 import UserLayout from "./components/Layout/UserLayout";
 
@@ -94,7 +94,7 @@ function App() {
               <Route
                 path="profileUser"
                 element={
-                  <RoleRoute allowedRoles={["customer"]}>
+                  <RoleRoute allowedRoles={["customer","owner"]}>
                     <ProfileUser />
                   </RoleRoute>
                 }
@@ -142,6 +142,14 @@ function App() {
               path="*"
               element={<Navigate to="/" replace />}
             />
+            <Route
+    path="admin/partner-applications"
+    element={
+        <RoleRoute allowedRoles={["admin"]}>
+            <PartnerApplications />
+        </RoleRoute>
+    }
+/>
           </Routes>
         </BrowserRouter>
       </SearchProvider>

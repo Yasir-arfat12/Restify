@@ -3,89 +3,86 @@ const express = require("express");
 const router = express.Router();
 
 const { protect } = require("../middlewares/authMiddlewares");
-const { authorize } = require("../middlewares/roleMiddleware");
 
 const {
-    createdPod,
-    getPods,
-    getMyPods,
-    UpdatePod,
-    DeletePods,
-    searchPods
-} = require("../Controllers/podControllers");
+    createBooking,
+    getMyBookings,
+    getBookingById,
+    cancelBooking,
+    getOwnerBookings,
+    getOwnerEarnings
+} = require("../Controllers/BookingController");
 
 
 // =====================================================
-// SEARCH PODS
-// PUBLIC ROUTE
+// CREATE BOOKING
+// POST /api/bookings
 // =====================================================
 
-router.get(
-    "/search",
-    searchPods
-);
-
-
-// =====================================================
-// GET ALL PODS
-// PUBLIC ROUTE
-// =====================================================
-
-router.get(
+router.post(
     "/",
-    getPods
-);
-
-
-// =====================================================
-// CREATE POD
-// ADMIN / OWNER ONLY
-// =====================================================
-
-router.post(
-    "/create-pod",
     protect,
-    authorize("admin", "owner"),
-    createdPod
+    createBooking
 );
 
 
 // =====================================================
-// GET MY PODS
-// OWNER ONLY
+// CUSTOMER BOOKINGS
+// GET /api/bookings/my-bookings
 // =====================================================
 
 router.get(
-    "/myPods",
+    "/my-bookings",
     protect,
-    authorize("owner"),
-    getMyPods
+    getMyBookings
 );
 
 
 // =====================================================
-// UPDATE POD
-// ADMIN / OWNER ONLY
+// OWNER BOOKINGS
+// GET /api/bookings/owner-bookings
 // =====================================================
 
-router.post(
-    "/:id",
+router.get(
+    "/owner-bookings",
     protect,
-    authorize("owner", "admin"),
-    UpdatePod
+    getOwnerBookings
 );
 
 
 // =====================================================
-// DELETE POD
-// ADMIN / OWNER ONLY
+// OWNER EARNINGS
+// GET /api/bookings/owner-earnings
 // =====================================================
 
-router.delete(
+router.get(
+    "/owner-earnings",
+    protect,
+    getOwnerEarnings
+);
+
+
+// =====================================================
+// CANCEL BOOKING
+// PATCH /api/bookings/:id/cancel
+// =====================================================
+
+router.patch(
+    "/:id/cancel",
+    protect,
+    cancelBooking
+);
+
+
+// =====================================================
+// SINGLE BOOKING
+// GET /api/bookings/:id
+// =====================================================
+
+router.get(
     "/:id",
     protect,
-    authorize("owner", "admin"),
-    DeletePods
+    getBookingById
 );
 
 

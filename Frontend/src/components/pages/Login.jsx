@@ -30,7 +30,7 @@ const Login = ({ switchToRegister }) => {
             })
         );
 
-        navigate("/profileUser");
+        navigate("/");
 
     } catch (error) {
 
