@@ -1,14 +1,19 @@
 {
-  "name": "backend",
+  "name": "restify-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Restify backend API",
+  "main": "Server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js"
+    "start": "node Server.js",
+    "dev": "nodemon Server.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "restify",
+    "node",
+    "express",
+    "mongodb"
+  ],
+  "author": "Yasir Arfat",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
@@ -18,7 +23,9 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.0",
-    "nodemon": "^3.1.14",
     "razorpay": "^2.9.8"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }
