@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   BrowserRouter,
@@ -9,22 +8,26 @@ import {
 
 import { SearchProvider } from "./context/SearchContext";
 import { AuthProvider, useAuth } from "./context/authContext";
-import PartnerApplications from "./components/pages/PartnerApplications";
-import PartnerApply from "./components/pages/PartnerApply";
+
 import UserLayout from "./components/Layout/UserLayout";
 
-import ProfileUser from "./components/pages/ProfileUser";
+// Pages
 import Home from "./components/pages/Home";
 import AboutUs from "./components/pages/AboutUs";
-import OurPods from "./components/Pods/OurPods";
-
+import ProfileUser from "./components/pages/ProfileUser";
 import ProfileLogIn from "./components/pages/ProfileLogIn";
 import Login from "./components/pages/Login";
 import Register from "./components/pages/Register";
+import PartnerApply from "./components/pages/PartnerApply";
+import PartnerApplications from "./components/pages/PartnerApplications";
 import OwnerDashboard from "./components/pages/OwnerDashboard";
 import AdminDashboard from "./components/pages/AdminDashboard";
-import PodManagement from "./components/Pods/PodManagement";
+
+// Pods
+import OurPods from "./components/Pods/OurPods";
 import SearchPods from "./components/Pods/SearchPods";
+import PodManagement from "./components/Pods/PodManagement";
+
 /*
   Protects routes that require a logged-in user.
 */
@@ -77,40 +80,69 @@ function App() {
       <SearchProvider>
         <BrowserRouter>
           <Routes>
-            {/* Public authentication routes */}
+
+            {/* =====================================================
+                PUBLIC AUTHENTICATION ROUTES
+            ====================================================== */}
+
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* Public application routes */}
+
+            {/* =====================================================
+                MAIN USER LAYOUT
+            ====================================================== */}
+
             <Route path="/" element={<UserLayout />}>
+
+              {/* Home */}
               <Route index element={<Home />} />
 
+              {/* Public pages */}
               <Route path="about" element={<AboutUs />} />
               <Route path="pods" element={<OurPods />} />
               <Route path="searchpods" element={<SearchPods />} />
               <Route path="profile" element={<ProfileLogIn />} />
 
-              {/* Customer-only route */}
+
+              {/* =================================================
+                  CUSTOMER / OWNER / ADMIN PROFILE
+              ================================================== */}
+
               <Route
                 path="profileUser"
                 element={
-                  <RoleRoute allowedRoles={["customer","owner"]}>
+                  <RoleRoute
+                    allowedRoles={["customer", "owner", "admin"]}
+                  >
                     <ProfileUser />
                   </RoleRoute>
                 }
               />
 
-              {/* Owner and admin route for pod management */}
+
+              {/* =================================================
+                  POD MANAGEMENT
+                  OWNER + ADMIN
+              ================================================== */}
+
               <Route
                 path="pod-management"
                 element={
-                  <RoleRoute allowedRoles={["owner", "admin"]}>
+                  <RoleRoute
+                    allowedRoles={["owner", "admin"]}
+                  >
                     <PodManagement />
                   </RoleRoute>
                 }
               />
 
-              {/* Owner-only route */}
+
+              {/* =================================================
+                  OWNER DASHBOARD
+                  OWNER ONLY
+              ================================================== */}
+
               <Route
                 path="owner/dashboard"
                 element={
@@ -120,7 +152,12 @@ function App() {
                 }
               />
 
-              {/* Admin-only route */}
+
+              {/* =================================================
+                  ADMIN DASHBOARD
+                  ADMIN ONLY
+              ================================================== */}
+
               <Route
                 path="admin/dashboard"
                 element={
@@ -129,27 +166,45 @@ function App() {
                   </RoleRoute>
                 }
               />
+
+
+              {/* =================================================
+                  PARTNER APPLICATION MANAGEMENT
+                  ADMIN ONLY
+              ================================================== */}
+
+              <Route
+                path="admin/partner-applications"
+                element={
+                  <RoleRoute allowedRoles={["admin"]}>
+                    <PartnerApplications />
+                  </RoleRoute>
+                }
+              />
+
             </Route>
 
-            {/* Partner application route */}
+
+            {/* =====================================================
+                PARTNER APPLICATION FORM
+                PUBLIC
+            ====================================================== */}
+
             <Route
               path="/partner/apply"
               element={<PartnerApply />}
             />
 
-            {/* Unknown routes */}
+
+            {/* =====================================================
+                UNKNOWN ROUTES
+            ====================================================== */}
+
             <Route
               path="*"
               element={<Navigate to="/" replace />}
             />
-            <Route
-    path="admin/partner-applications"
-    element={
-        <RoleRoute allowedRoles={["admin"]}>
-            <PartnerApplications />
-        </RoleRoute>
-    }
-/>
+
           </Routes>
         </BrowserRouter>
       </SearchProvider>

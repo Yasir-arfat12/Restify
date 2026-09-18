@@ -1,62 +1,14 @@
-// const express = require("express");
-// const cors = require("cors");
-// const dotenv = require("dotenv")
-// const jwt = require("jsonwebtoken");
-// const connectDB = require("./config/db")
-// const BookingRoutes = require("./routes/BookingRoutes");
-// const BookingPodRoutes = require("./routes/BookPodRoutes");
-// const UserRoutes  = require("./routes/UserRoutes")
-// const BillRoutes = require("./routes/BillRoutes");
-// const BookingManagementRoutes = require("./routes/BookingManagementRoutes")
-// const PartnerRoutes = require("./routes/PartnerRoutes");
-// const app = express();
-// app.use(express.json());
-// app.use(cors());
-
-// dotenv.config();
-// const PORT = process.env.PORT || 3000;
-
-// app.get("/", (req, res)=> {
-//     res.send("Welcome to Restify")
-// });
-
-// //connect mongodb
-// connectDB();
-
-
-// // connect routes
-// app.use("/api/users",UserRoutes)
-// app.use("/api/pods", BookingRoutes)
-// app.use("/api/bill",BillRoutes)
-// app.use("/api/bookings",BookingManagementRoutes)
-// app.use("/api/partners",PartnerRoutes);
-// console.log("server started")
-// app.listen(PORT, ()=> {
-//     console.log("server running on", PORT);
-    
-// })
-
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 
 const connectDB = require("./config/db");
 
-const UserRoutes =
-    require("./routes/UserRoutes");
-
-const PodRoutes =
-    require("./routes/podRoutes");
-
-const BookingRoutes =
-    require("./routes/BookingRoutes");
-
-const BillRoutes =
-    require("./routes/BillRoutes");
-
-const PartnerRoutes =
-    require("./routes/PartnerRoutes");
-
+const UserRoutes = require("./routes/UserRoutes");
+const PodRoutes = require("./routes/podRoutes");
+const BookingRoutes = require("./routes/BookingRoutes");
+const BillRoutes = require("./routes/BillRoutes");
+const PartnerRoutes = require("./routes/PartnerRoutes");
 
 dotenv.config();
 
@@ -64,18 +16,35 @@ const app = express();
 
 
 // =====================================================
-// MIDDLEWARE
+// CONFIGURATION
+// =====================================================
+
+const PORT = process.env.PORT || 5000;
+
+const allowedOrigin =
+    process.env.FRONTEND_URL || "*";
+
+
+// =====================================================
+// CORS
 // =====================================================
 
 app.use(
     cors({
-        origin: true,
+        origin: allowedOrigin,
         credentials: true
     })
 );
 
+
+// =====================================================
+// BODY PARSER
+// =====================================================
+
 app.use(
-    express.json()
+    express.json({
+        limit: "1mb"
+    })
 );
 
 
@@ -90,21 +59,31 @@ connectDB();
 // HEALTH CHECK
 // =====================================================
 
-app.get(
-    "/",
-    (req, res) => {
+app.get("/", (req, res) => {
 
-        res.status(200).json({
+    res.status(200).json({
+        success: true,
+        message: "Restify API is running",
+        environment:
+            process.env.NODE_ENV || "development"
+    });
 
-            success: true,
+});
 
-            message:
-                "Restify API is running"
 
-        });
+// =====================================================
+// API HEALTH CHECK
+// =====================================================
 
-    }
-);
+app.get("/api/health", (req, res) => {
+
+    res.status(200).json({
+        success: true,
+        message: "Restify API is healthy",
+        timestamp: new Date().toISOString()
+    });
+
+});
 
 
 // =====================================================
@@ -116,24 +95,20 @@ app.use(
     UserRoutes
 );
 
-
 app.use(
     "/api/pods",
     PodRoutes
 );
-
 
 app.use(
     "/api/bookings",
     BookingRoutes
 );
 
-
 app.use(
     "/api/bill",
     BillRoutes
 );
-
 
 app.use(
     "/api/partners",
@@ -145,20 +120,15 @@ app.use(
 // 404 HANDLER
 // =====================================================
 
-app.use(
-    (req, res) => {
+app.use((req, res) => {
 
-        res.status(404).json({
+    res.status(404).json({
+        success: false,
+        message:
+            `Route not found: ${req.method} ${req.originalUrl}`
+    });
 
-            success: false,
-
-            message:
-                `Route not found: ${req.method} ${req.originalUrl}`
-
-        });
-
-    }
-);
+});
 
 
 // =====================================================
@@ -173,15 +143,20 @@ app.use(
             error
         );
 
-        res.status(
-            error.status || 500
-        ).json({
+        const statusCode =
+            error.statusCode ||
+            error.status ||
+            500;
+
+        res.status(statusCode).json({
 
             success: false,
 
             message:
-                error.message ||
-                "Internal server error"
+                process.env.NODE_ENV === "production"
+                    ? "Internal server error"
+                    : error.message ||
+                      "Internal server error"
 
         });
 
@@ -190,15 +165,12 @@ app.use(
 
 
 // =====================================================
-// SERVER
+// START SERVER
 // =====================================================
-
-const PORT =
-    process.env.PORT || 5000;
-
 
 app.listen(
     PORT,
+    "0.0.0.0",
     () => {
 
         console.log(
