@@ -1,12 +1,25 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/authContext";
+import React, {
+    useEffect,
+    useState
+} from "react";
+
+import {
+    useNavigate
+} from "react-router-dom";
+
+import {
+    useAuth
+} from "../../context/authContext";
+
 import OwnerDashboard from "./OwnerDashboard";
+
 import API from "../../api/axios";
+
 
 function ProfileUser() {
 
-    const navigate = useNavigate();
+    const navigate =
+        useNavigate();
 
     const {
         user,
@@ -14,20 +27,33 @@ function ProfileUser() {
         loading: authLoading
     } = useAuth();
 
-    if (user?.role === "owner") {
-    return <OwnerDashboard />;
-}
+
     // =====================================================
-    // BOOKING STATE
+    // CUSTOMER BOOKING STATE
     // =====================================================
 
-    const [bookings, setBookings] = useState([]);
+    const [
+        bookings,
+        setBookings
+    ] = useState([]);
 
-    const [loadingBookings, setLoadingBookings] = useState(true);
 
-    const [bookingError, setBookingError] = useState("");
+    const [
+        loadingBookings,
+        setLoadingBookings
+    ] = useState(true);
 
-    const [cancellingId, setCancellingId] = useState(null);
+
+    const [
+        bookingError,
+        setBookingError
+    ] = useState("");
+
+
+    const [
+        cancellingId,
+        setCancellingId
+    ] = useState(null);
 
 
     // =====================================================
@@ -43,14 +69,17 @@ function ProfileUser() {
             setBookingError("");
 
 
-            const response = await API.get(
-                "/bookings/my-bookings"
-            );
+            const response =
+                await API.get(
+                    "/bookings/my-bookings"
+                );
 
 
             if (
                 response.data?.success &&
-                Array.isArray(response.data.bookings)
+                Array.isArray(
+                    response.data.bookings
+                )
             ) {
 
                 setBookings(
@@ -76,6 +105,7 @@ function ProfileUser() {
                 "Unable to load your bookings."
             );
 
+
             setBookings([]);
 
         } finally {
@@ -88,7 +118,7 @@ function ProfileUser() {
 
 
     // =====================================================
-    // LOAD BOOKINGS WHEN USER IS AVAILABLE
+    // FETCH WHEN CUSTOMER LOGS IN
     // =====================================================
 
     useEffect(() => {
@@ -100,6 +130,10 @@ function ProfileUser() {
 
             fetchBookings();
 
+        } else {
+
+            setLoadingBookings(false);
+
         }
 
     }, [user]);
@@ -109,54 +143,57 @@ function ProfileUser() {
     // CANCEL BOOKING
     // =====================================================
 
-    const handleCancelBooking = async (bookingId) => {
+    const handleCancelBooking =
+        async (bookingId) => {
 
-        const confirmed = window.confirm(
-            "Are you sure you want to cancel this booking?"
-        );
-
-
-        if (!confirmed) {
-
-            return;
-
-        }
+            const confirmed =
+                window.confirm(
+                    "Are you sure you want to cancel this booking?"
+                );
 
 
-        try {
+            if (!confirmed) {
 
-            setCancellingId(bookingId);
+                return;
 
-
-            await API.patch(
-                `/bookings/${bookingId}/cancel`
-            );
+            }
 
 
-            // Refresh booking list
+            try {
 
-            await fetchBookings();
-
-        } catch (error) {
-
-            console.error(
-                "CANCEL BOOKING ERROR:",
-                error
-            );
+                setCancellingId(
+                    bookingId
+                );
 
 
-            window.alert(
-                error.response?.data?.message ||
-                "Unable to cancel this booking."
-            );
+                await API.patch(
+                    `/bookings/${bookingId}/cancel`
+                );
 
-        } finally {
 
-            setCancellingId(null);
+                await fetchBookings();
 
-        }
 
-    };
+            } catch (error) {
+
+                console.error(
+                    "CANCEL BOOKING ERROR:",
+                    error
+                );
+
+
+                window.alert(
+                    error.response?.data?.message ||
+                    "Unable to cancel this booking."
+                );
+
+            } finally {
+
+                setCancellingId(null);
+
+            }
+
+        };
 
 
     // =====================================================
@@ -180,12 +217,10 @@ function ProfileUser() {
 
         return (
 
-            <section className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
+            <section className="min-h-screen bg-slate-950 flex items-center justify-center">
 
                 <p className="text-white text-lg">
-
                     Loading profile...
-
                 </p>
 
             </section>
@@ -205,31 +240,23 @@ function ProfileUser() {
 
             <section className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
 
-                <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center">
+                <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-8 text-center">
 
                     <h1 className="text-3xl font-bold text-white">
-
                         Login Required
-
                     </h1>
 
-
-                    <p className="text-slate-400 mt-3">
-
-                        Please login to view your bookings.
-
+                    <p className="mt-3 text-slate-400">
+                        Please login to view your account.
                     </p>
-
 
                     <button
                         onClick={() =>
                             navigate("/login")
                         }
-                        className="mt-6 w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-semibold transition"
+                        className="mt-6 w-full rounded-xl bg-blue-600 py-3 font-semibold text-white hover:bg-blue-500"
                     >
-
                         Login
-
                     </button>
 
                 </div>
@@ -242,7 +269,22 @@ function ProfileUser() {
 
 
     // =====================================================
-    // PROFILE USER PAGE
+    // OWNER PROFILE
+    // =====================================================
+
+    if (
+        user.role === "owner"
+    ) {
+
+        return (
+            <OwnerDashboard />
+        );
+
+    }
+
+
+    // =====================================================
+    // CUSTOMER PROFILE
     // =====================================================
 
     return (
@@ -252,16 +294,12 @@ function ProfileUser() {
             <div className="mx-auto max-w-6xl">
 
 
-                {/* =================================================
-                    HEADER
-                ================================================= */}
+                {/* HEADER */}
 
                 <div className="mb-10">
 
-                    <p className="text-blue-400 text-sm font-semibold tracking-widest">
-
+                    <p className="text-sm font-semibold tracking-widest text-blue-400">
                         MY BOOKINGS
-
                     </p>
 
 
@@ -269,7 +307,7 @@ function ProfileUser() {
 
                         <div>
 
-                            <h1 className="text-3xl sm:text-4xl font-bold text-white">
+                            <h1 className="text-3xl font-bold text-white sm:text-4xl">
 
                                 Welcome, {user.name}
 
@@ -278,7 +316,7 @@ function ProfileUser() {
 
                             <p className="mt-2 text-slate-400">
 
-                                View and manage all your Restify bookings.
+                                View and manage your Restify bookings.
 
                             </p>
 
@@ -289,7 +327,7 @@ function ProfileUser() {
                             onClick={() =>
                                 navigate("/searchpods")
                             }
-                            className="w-full sm:w-auto rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
+                            className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-500"
                         >
 
                             Book Another Pod
@@ -301,53 +339,37 @@ function ProfileUser() {
                 </div>
 
 
-                {/* =================================================
-                    SUMMARY
-                ================================================= */}
+                {/* SUMMARY */}
 
-                <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="mb-8 grid gap-4 sm:grid-cols-3">
 
-
-                    {/* TOTAL BOOKINGS */}
 
                     <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
 
                         <p className="text-sm text-slate-400">
-
                             Total Bookings
-
                         </p>
 
-
                         <p className="mt-2 text-3xl font-bold text-white">
-
                             {bookings.length}
-
                         </p>
 
                     </div>
 
 
-                    {/* ACTIVE BOOKINGS */}
-
                     <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
 
                         <p className="text-sm text-slate-400">
-
-                            Active Bookings
-
+                            Active
                         </p>
-
 
                         <p className="mt-2 text-3xl font-bold text-blue-400">
 
                             {
                                 bookings.filter(
-                                    (booking) =>
-                                        booking.bookingStatus ===
-                                            "Pending" ||
-                                        booking.bookingStatus ===
-                                            "Confirmed"
+                                    booking =>
+                                        booking.bookingStatus === "Pending" ||
+                                        booking.bookingStatus === "Confirmed"
                                 ).length
                             }
 
@@ -356,24 +378,18 @@ function ProfileUser() {
                     </div>
 
 
-                    {/* COMPLETED */}
-
                     <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
 
                         <p className="text-sm text-slate-400">
-
                             Completed
-
                         </p>
-
 
                         <p className="mt-2 text-3xl font-bold text-green-400">
 
                             {
                                 bookings.filter(
-                                    (booking) =>
-                                        booking.bookingStatus ===
-                                        "Completed"
+                                    booking =>
+                                        booking.bookingStatus === "Completed"
                                 ).length
                             }
 
@@ -384,28 +400,21 @@ function ProfileUser() {
                 </div>
 
 
-                {/* =================================================
-                    ERROR
-                ================================================= */}
+                {/* ERROR */}
 
                 {bookingError && (
 
                     <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-5">
 
                         <p className="text-red-400">
-
                             {bookingError}
-
                         </p>
-
 
                         <button
                             onClick={fetchBookings}
-                            className="mt-4 rounded-lg bg-red-500/20 px-4 py-2 text-sm font-semibold text-red-300 hover:bg-red-500/30"
+                            className="mt-4 rounded-lg bg-red-500/20 px-4 py-2 text-sm font-semibold text-red-300"
                         >
-
                             Try Again
-
                         </button>
 
                     </div>
@@ -413,78 +422,63 @@ function ProfileUser() {
                 )}
 
 
-                {/* =================================================
-                    LOADING BOOKINGS
-                ================================================= */}
+                {/* LOADING */}
 
                 {loadingBookings && (
 
-                    <div className="space-y-6">
+                    <div className="space-y-5">
 
-                        {[1, 2].map((item) => (
+                        {[1, 2].map(
+                            item => (
 
-                            <div
-                                key={item}
-                                className="animate-pulse rounded-3xl border border-slate-800 bg-slate-900 p-6"
-                            >
+                                <div
+                                    key={item}
+                                    className="animate-pulse rounded-3xl border border-slate-800 bg-slate-900 p-6"
+                                >
 
-                                <div className="h-6 w-1/3 rounded bg-slate-800" />
+                                    <div className="h-5 w-1/3 rounded bg-slate-800" />
 
-                                <div className="mt-5 h-4 w-1/2 rounded bg-slate-800" />
+                                    <div className="mt-4 h-4 w-1/2 rounded bg-slate-800" />
 
-                                <div className="mt-3 h-4 w-1/3 rounded bg-slate-800" />
+                                    <div className="mt-3 h-4 w-1/3 rounded bg-slate-800" />
 
-                                <div className="mt-6 h-12 w-full rounded bg-slate-800" />
+                                </div>
 
-                            </div>
-
-                        ))}
+                            )
+                        )}
 
                     </div>
 
                 )}
 
 
-                {/* =================================================
-                    NO BOOKINGS
-                ================================================= */}
+                {/* NO BOOKINGS */}
 
                 {!loadingBookings &&
                     !bookingError &&
                     bookings.length === 0 && (
 
-                        <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900/70 px-6 py-16 text-center">
+                        <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900 p-12 text-center">
 
                             <div className="text-5xl">
-
                                 🏕️
-
                             </div>
 
-
                             <h2 className="mt-5 text-2xl font-bold text-white">
-
                                 No bookings yet
-
                             </h2>
 
-
-                            <p className="mx-auto mt-3 max-w-md text-slate-400">
-
-                                You haven't booked a pod yet. Find a pod and make your first booking.
-
+                            <p className="mt-3 text-slate-400">
+                                Find a pod and make your first booking.
                             </p>
-
 
                             <button
                                 onClick={() =>
                                     navigate("/searchpods")
                                 }
-                                className="mt-6 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-500"
+                                className="mt-6 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-500"
                             >
-
                                 Explore Pods
-
                             </button>
 
                         </div>
@@ -492,98 +486,44 @@ function ProfileUser() {
                     )}
 
 
-                {/* =================================================
-                    BOOKINGS
-                ================================================= */}
+                {/* BOOKINGS */}
 
                 {!loadingBookings &&
                     bookings.length > 0 && (
 
-                        <div className="space-y-6">
+                        <div className="space-y-5">
 
-                            {bookings.map((booking) => {
-
-                                const pod = booking.pod;
-
-
-                                const bookingDate = booking.bookingDate
-                                    ? new Date(
-                                          booking.bookingDate
-                                      ).toLocaleDateString(
-                                          "en-IN",
-                                          {
-                                              day: "2-digit",
-                                              month: "short",
-                                              year: "numeric"
-                                          }
-                                      )
-                                    : "Date unavailable";
-
-
-                                const createdDate = booking.createdAt
-                                    ? new Date(
-                                          booking.createdAt
-                                      ).toLocaleDateString(
-                                          "en-IN",
-                                          {
-                                              day: "2-digit",
-                                              month: "short",
-                                              year: "numeric"
-                                          }
-                                      )
-                                    : "";
-
-
-                                const isActive =
-                                    booking.bookingStatus ===
-                                        "Pending" ||
-                                    booking.bookingStatus ===
-                                        "Confirmed";
-
-
-                                return (
+                            {bookings.map(
+                                booking => (
 
                                     <article
                                         key={booking._id}
-                                        className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-xl"
+                                        className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900"
                                     >
 
-                                        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr]">
+                                        <div className="flex flex-col md:flex-row">
 
+                                            {/* IMAGE */}
 
-                                            {/* =================================================
-                                                POD IMAGE
-                                            ================================================= */}
+                                            <div className="h-52 w-full md:h-auto md:w-64">
 
-                                            <div className="h-56 lg:h-full min-h-[240px] bg-slate-800">
-
-                                                {pod?.images?.[0] ? (
+                                                {booking.pod?.images?.[0] ? (
 
                                                     <img
                                                         src={
-                                                            pod.images[0]
+                                                            booking.pod.images[0]
                                                         }
                                                         alt={
-                                                            pod.podName ||
+                                                            booking.pod.podName ||
                                                             "Restify pod"
                                                         }
                                                         className="h-full w-full object-cover"
-                                                        onError={(
-                                                            event
-                                                        ) => {
-
-                                                            event.currentTarget.style.display =
-                                                                "none";
-
-                                                        }}
                                                     />
 
                                                 ) : (
 
-                                                    <div className="flex h-full items-center justify-center text-6xl">
-
+                                                    <div className="flex h-full min-h-52 items-center justify-center bg-slate-800 text-5xl">
                                                         🏕️
-
                                                     </div>
 
                                                 )}
@@ -591,29 +531,20 @@ function ProfileUser() {
                                             </div>
 
 
-                                            {/* =================================================
-                                                BOOKING DETAILS
-                                            ================================================= */}
+                                            {/* DETAILS */}
 
-                                            <div className="p-6 sm:p-7">
+                                            <div className="flex-1 p-6">
 
-                                                {/* TOP ROW */}
-
-                                                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                                <div className="flex flex-col gap-4 md:flex-row md:justify-between">
 
                                                     <div>
 
-                                                        <p className="text-xs font-semibold uppercase tracking-wider text-blue-400">
+                                                        <h2 className="text-xl font-bold text-white">
 
-                                                            Booking
-
-                                                        </p>
-
-
-                                                        <h2 className="mt-1 text-2xl font-bold text-white">
-
-                                                            {pod?.podName ||
-                                                                "Pod unavailable"}
+                                                            {
+                                                                booking.pod?.podName ||
+                                                                "Restify Pod"
+                                                            }
 
                                                         </h2>
 
@@ -622,197 +553,23 @@ function ProfileUser() {
 
                                                             📍{" "}
 
-                                                            {pod?.location ||
-                                                                pod?.city ||
-                                                                "Location unavailable"}
+                                                            {
+                                                                booking.pod?.location ||
+                                                                booking.pod?.city ||
+                                                                "Location unavailable"
+                                                            }
 
                                                         </p>
 
                                                     </div>
 
-
-                                                    {/* STATUS */}
-
-                                                    <span
-                                                        className={`w-fit rounded-full px-4 py-2 text-xs font-bold ${
-                                                            booking.bookingStatus ===
-                                                            "Confirmed"
-
-                                                                ? "bg-green-400/10 text-green-400 border border-green-400/20"
-
-                                                                : booking.bookingStatus ===
-                                                                  "Pending"
-
-                                                                ? "bg-yellow-400/10 text-yellow-400 border border-yellow-400/20"
-
-                                                                : booking.bookingStatus ===
-                                                                  "Cancelled"
-
-                                                                ? "bg-red-400/10 text-red-400 border border-red-400/20"
-
-                                                                : "bg-blue-400/10 text-blue-400 border border-blue-400/20"
-                                                        }`}
-                                                    >
-
-                                                        {
-                                                            booking.bookingStatus
-                                                        }
-
-                                                    </span>
-
-                                                </div>
-
-
-                                                {/* DIVIDER */}
-
-                                                <div className="my-6 h-px bg-slate-800" />
-
-
-                                                {/* BOOKING INFO */}
-
-                                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-
-
-                                                    {/* DATE */}
 
                                                     <div>
 
-                                                        <p className="text-xs uppercase tracking-wider text-slate-500">
-
-                                                            Date
-
-                                                        </p>
-
-
-                                                        <p className="mt-2 font-semibold text-white">
-
-                                                            {bookingDate}
-
-                                                        </p>
-
-                                                    </div>
-
-
-                                                    {/* TIME */}
-
-                                                    <div>
-
-                                                        <p className="text-xs uppercase tracking-wider text-slate-500">
-
-                                                            Time
-
-                                                        </p>
-
-
-                                                        <p className="mt-2 font-semibold text-white">
-
-                                                            {booking.startTime}
-
-                                                            {" → "}
-
-                                                            {booking.endTime}
-
-                                                        </p>
-
-                                                    </div>
-
-
-                                                    {/* DURATION */}
-
-                                                    <div>
-
-                                                        <p className="text-xs uppercase tracking-wider text-slate-500">
-
-                                                            Duration
-
-                                                        </p>
-
-
-                                                        <p className="mt-2 font-semibold text-white">
-
-                                                            {booking.duration}
-
-                                                            {" "}
-
-                                                            {Number(
-                                                                booking.duration
-                                                            ) === 1
-                                                                ? "hour"
-                                                                : "hours"}
-
-                                                        </p>
-
-                                                    </div>
-
-
-                                                    {/* TOTAL */}
-
-                                                    <div>
-
-                                                        <p className="text-xs uppercase tracking-wider text-slate-500">
-
-                                                            Amount
-
-                                                        </p>
-
-
-                                                        <p className="mt-2 text-lg font-bold text-blue-400">
-
-                                                            ₹
-                                                            {Number(
-                                                                booking.subtotal ||
-                                                                0
-                                                            ).toFixed(2)}
-
-                                                        </p>
-
-                                                    </div>
-
-                                                </div>
-
-
-                                                {/* PAYMENT */}
-
-                                                <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-
-                                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-
-                                                        <div>
-
-                                                            <p className="text-sm font-semibold text-white">
-
-                                                                Payment Status
-
-                                                            </p>
-
-
-                                                            <p className="mt-1 text-xs text-slate-400">
-
-                                                                Invoice and payment details will be available after payment integration.
-
-                                                            </p>
-
-                                                        </div>
-
-
-                                                        <span
-                                                            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                                                                booking.paymentStatus ===
-                                                                "Paid"
-
-                                                                    ? "bg-green-400/10 text-green-400"
-
-                                                                    : booking.paymentStatus ===
-                                                                      "Refunded"
-
-                                                                    ? "bg-purple-400/10 text-purple-400"
-
-                                                                    : "bg-yellow-400/10 text-yellow-400"
-                                                            }`}
-                                                        >
+                                                        <span className="rounded-full bg-blue-400/10 px-3 py-1.5 text-xs font-semibold text-blue-300">
 
                                                             {
-                                                                booking.paymentStatus
+                                                                booking.bookingStatus
                                                             }
 
                                                         </span>
@@ -822,20 +579,75 @@ function ProfileUser() {
                                                 </div>
 
 
-                                                {/* BOTTOM */}
+                                                <div className="mt-6 grid gap-4 text-sm sm:grid-cols-3">
 
-                                                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                                    <div>
 
-                                                    <div className="text-xs text-slate-500">
+                                                        <p className="text-slate-500">
+                                                            Date
+                                                        </p>
 
-                                                        {createdDate
-                                                            ? `Booked on ${createdDate}`
-                                                            : `Booking ID: ${booking._id}`}
+                                                        <p className="mt-1 font-medium text-white">
+
+                                                            {
+                                                                booking.bookingDate
+                                                                    ? new Date(
+                                                                        booking.bookingDate
+                                                                    ).toLocaleDateString()
+                                                                    : "N/A"
+                                                            }
+
+                                                        </p>
 
                                                     </div>
 
 
-                                                    {isActive && (
+                                                    <div>
+
+                                                        <p className="text-slate-500">
+                                                            Time
+                                                        </p>
+
+                                                        <p className="mt-1 font-medium text-white">
+
+                                                            {booking.startTime}
+                                                            {" → "}
+                                                            {booking.endTime}
+
+                                                        </p>
+
+                                                    </div>
+
+
+                                                    <div>
+
+                                                        <p className="text-slate-500">
+                                                            Amount
+                                                        </p>
+
+                                                        <p className="mt-1 font-bold text-blue-400">
+
+                                                            ₹
+                                                            {
+                                                                Number(
+                                                                    booking.subtotal || 0
+                                                                ).toFixed(2)
+                                                            }
+
+                                                        </p>
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                {/* CANCEL */}
+
+                                                {
+                                                    booking.bookingStatus !==
+                                                        "Cancelled" &&
+                                                    booking.bookingStatus !==
+                                                        "Completed" && (
 
                                                         <button
                                                             onClick={() =>
@@ -847,21 +659,20 @@ function ProfileUser() {
                                                                 cancellingId ===
                                                                 booking._id
                                                             }
-                                                            className="rounded-xl border border-red-500/40 px-5 py-2.5 text-sm font-semibold text-red-400 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                                                            className="mt-6 rounded-xl border border-red-500/40 px-5 py-2.5 text-sm font-semibold text-red-400 hover:bg-red-500/10 disabled:opacity-50"
                                                         >
 
-                                                            {cancellingId ===
-                                                            booking._id
-
-                                                                ? "Cancelling..."
-
-                                                                : "Cancel Booking"}
+                                                            {
+                                                                cancellingId ===
+                                                                booking._id
+                                                                    ? "Cancelling..."
+                                                                    : "Cancel Booking"
+                                                            }
 
                                                         </button>
 
-                                                    )}
-
-                                                </div>
+                                                    )
+                                                }
 
                                             </div>
 
@@ -869,28 +680,23 @@ function ProfileUser() {
 
                                     </article>
 
-                                );
-
-                            })}
+                                )
+                            )}
 
                         </div>
 
                     )}
 
 
-                {/* =================================================
-                    LOGOUT
-                ================================================= */}
+                {/* LOGOUT */}
 
                 <div className="mt-10 border-t border-slate-800 pt-8">
 
                     <button
                         onClick={handleLogout}
-                        className="rounded-xl border border-red-500/40 px-6 py-3 font-semibold text-red-400 transition hover:bg-red-500/10"
+                        className="rounded-xl border border-red-500/40 px-6 py-3 font-semibold text-red-400 hover:bg-red-500/10"
                     >
-
                         Logout
-
                     </button>
 
                 </div>
@@ -904,4 +710,4 @@ function ProfileUser() {
 }
 
 
-export default ProfileUser;
+export default ProfileUser; 

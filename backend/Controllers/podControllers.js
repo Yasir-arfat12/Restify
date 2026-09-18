@@ -873,32 +873,3 @@ function timeToMinutes(time) {
 // OWNER ONLY
 // ======================================================
 
-const getMyPods = async (req, res) => {
-    try {
-
-        const pods = await Pod.find({
-            owner: req.user._id
-        }).sort({
-            createdAt: -1
-        });
-
-        return res.status(200).json({
-            success: true,
-            count: pods.length,
-            pods
-        });
-
-    } catch (error) {
-
-        console.error(
-            "GET MY PODS ERROR:",
-            error
-        );
-
-        return res.status(500).json({
-            success: false,
-            message: "Unable to fetch your pods."
-        });
-
-    }
-};

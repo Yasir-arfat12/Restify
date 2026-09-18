@@ -1,54 +1,61 @@
+const mongoose = require("mongoose");
+
 const Pod = require("../models/BookPods");
 const Booking = require("../models/Booking");
 const Bill = require("../models/Bill");
+
 const generateInvoice = require("../Utils/invoiceGenerator");
 const { calculateGST } = require("../Utils/gstCalculator");
 
 
-// ----------------------------------------------------
-// Helper: Convert HH:MM into minutes
-// ----------------------------------------------------
-const timeToMinutes = (time) => {
-    if (!time || !/^\d{2}:\d{2}$/.test(time)) {
-        return null;
-    }
+// =====================================================
+// TIME HELPER
+// =====================================================
 
-    const [hours, minutes] = time.split(":").map(Number);
+const timeToMinutes = (time) => {
 
     if (
-        hours < 0 ||
-        hours > 23 ||
-        minutes < 0 ||
-        minutes > 59
+        typeof time !== "string" ||
+        !/^([01]\d|2[0-3]):([0-5]\d)$/.test(time)
     ) {
         return null;
     }
+
+    const [
+        hours,
+        minutes
+    ] = time.split(":").map(Number);
 
     return hours * 60 + minutes;
 };
 
 
-// ----------------------------------------------------
-// Helper: Check whether two time ranges overlap
-// ----------------------------------------------------
+// =====================================================
+// OVERLAP HELPER
+// =====================================================
+
 const isOverlapping = (
     requestedStart,
     requestedEnd,
     bookedStart,
     bookedEnd
 ) => {
+
     return (
         requestedStart < bookedEnd &&
         requestedEnd > bookedStart
     );
+
 };
 
 
-// ====================================================
+// =====================================================
 // CREATE BOOKING
-// ====================================================
+// POST /api/bookings
+// =====================================================
 
 exports.createBooking = async (req, res) => {
+
     try {
 
         const {
@@ -59,9 +66,9 @@ exports.createBooking = async (req, res) => {
         } = req.body;
 
 
-        // ---------------------------------------------
-        // Basic validation
-        // ---------------------------------------------
+        // -------------------------------------------------
+        // VALIDATION
+        // -------------------------------------------------
 
         if (
             !podId ||
@@ -69,109 +76,167 @@ exports.createBooking = async (req, res) => {
             !startTime ||
             !endTime
         ) {
+
             return res.status(400).json({
                 success: false,
                 message:
                     "Pod, booking date, start time and end time are required"
             });
+
         }
 
 
-        // ---------------------------------------------
-        // Find pod
-        // ---------------------------------------------
+        // -------------------------------------------------
+        // VALIDATE OBJECT ID
+        // -------------------------------------------------
+
+        if (!mongoose.Types.ObjectId.isValid(podId)) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Invalid pod ID"
+            });
+
+        }
+
+
+        // -------------------------------------------------
+        // FIND POD
+        // -------------------------------------------------
 
         const pod = await Pod.findById(podId);
 
         if (!pod) {
+
             return res.status(404).json({
                 success: false,
                 message: "Pod not found"
             });
+
         }
 
 
-        // ---------------------------------------------
-        // Check pod availability
-        // ---------------------------------------------
+        // -------------------------------------------------
+        // POD STATUS
+        // -------------------------------------------------
 
         if (pod.status !== "Available") {
+
             return res.status(400).json({
                 success: false,
                 message: "This pod is currently unavailable"
             });
+
         }
 
 
-        // ---------------------------------------------
-        // Validate date
-        // ---------------------------------------------
+        // -------------------------------------------------
+        // DATE
+        // -------------------------------------------------
 
         const selectedDate = new Date(bookingDate);
 
-        if (Number.isNaN(selectedDate.getTime())) {
+        if (
+            Number.isNaN(
+                selectedDate.getTime()
+            )
+        ) {
+
             return res.status(400).json({
                 success: false,
                 message: "Invalid booking date"
             });
+
         }
 
 
-        // ---------------------------------------------
-        // Prevent booking in the past
-        // ---------------------------------------------
+        const bookingStart = new Date(
+            selectedDate
+        );
+
+        bookingStart.setHours(
+            0,
+            0,
+            0,
+            0
+        );
+
+
+        const bookingEnd = new Date(
+            bookingStart
+        );
+
+        bookingEnd.setDate(
+            bookingEnd.getDate() + 1
+        );
+
+
+        // -------------------------------------------------
+        // PREVENT PAST BOOKING
+        // -------------------------------------------------
 
         const today = new Date();
 
-        today.setHours(0, 0, 0, 0);
+        today.setHours(
+            0,
+            0,
+            0,
+            0
+        );
 
-        const bookingDay = new Date(selectedDate);
 
-        bookingDay.setHours(0, 0, 0, 0);
+        if (bookingStart < today) {
 
-        if (bookingDay < today) {
             return res.status(400).json({
                 success: false,
-                message: "You cannot book a pod for a past date"
+                message:
+                    "You cannot book a pod for a past date"
             });
+
         }
 
 
-        // ---------------------------------------------
-        // Convert times to minutes
-        // ---------------------------------------------
+        // -------------------------------------------------
+        // TIME
+        // -------------------------------------------------
 
-        const requestedStart = timeToMinutes(startTime);
-        const requestedEnd = timeToMinutes(endTime);
+        const requestedStart =
+            timeToMinutes(startTime);
+
+        const requestedEnd =
+            timeToMinutes(endTime);
 
 
         if (
             requestedStart === null ||
             requestedEnd === null
         ) {
+
             return res.status(400).json({
                 success: false,
-                message: "Invalid time format. Use HH:MM"
+                message:
+                    "Invalid time format. Use HH:MM"
             });
+
         }
 
 
-        // ---------------------------------------------
-        // Validate time range
-        // ---------------------------------------------
+        if (
+            requestedEnd <= requestedStart
+        ) {
 
-        if (requestedEnd <= requestedStart) {
             return res.status(400).json({
                 success: false,
                 message:
                     "End time must be greater than start time"
             });
+
         }
 
 
-        // ---------------------------------------------
-        // Calculate duration
-        // ---------------------------------------------
+        // -------------------------------------------------
+        // DURATION
+        // -------------------------------------------------
 
         const durationMinutes =
             requestedEnd - requestedStart;
@@ -180,42 +245,38 @@ exports.createBooking = async (req, res) => {
             durationMinutes / 60;
 
 
-        // ---------------------------------------------
-        // Find existing active bookings
-        // ---------------------------------------------
+        // -------------------------------------------------
+        // EXISTING BOOKINGS
+        // -------------------------------------------------
 
-        const existingBookings = await Booking.find({
-            pod: podId,
+        const existingBookings =
+            await Booking.find({
 
-            bookingDate: {
-                $gte: new Date(
-                    selectedDate.setHours(0, 0, 0, 0)
-                ),
+                pod: podId,
 
-                $lt: new Date(
-                    new Date(bookingDate).setHours(
-                        24,
-                        0,
-                        0,
-                        0
-                    )
-                )
-            },
+                bookingDate: {
+                    $gte: bookingStart,
+                    $lt: bookingEnd
+                },
 
-            bookingStatus: {
-                $in: [
-                    "Pending",
-                    "Confirmed"
-                ]
-            }
-        });
+                bookingStatus: {
+                    $in: [
+                        "Pending",
+                        "Confirmed"
+                    ]
+                }
+
+            });
 
 
-        // ---------------------------------------------
-        // Check overlap
-        // ---------------------------------------------
+        // -------------------------------------------------
+        // CHECK OVERLAP
+        // -------------------------------------------------
 
-        for (const existingBooking of existingBookings) {
+        for (
+            const existingBooking
+            of existingBookings
+        ) {
 
             const bookedStart =
                 timeToMinutes(
@@ -240,103 +301,132 @@ exports.createBooking = async (req, res) => {
             ) {
 
                 return res.status(409).json({
+
                     success: false,
+
                     message:
                         "This pod is already booked for the selected time"
+
                 });
+
             }
+
         }
 
 
-        // ---------------------------------------------
-        // Calculate subtotal
-        // ---------------------------------------------
+        // -------------------------------------------------
+        // PRICE
+        // -------------------------------------------------
 
         const subtotal =
-            durationHours * pod.hourlyPrice;
+            durationHours *
+            Number(pod.hourlyPrice);
 
 
-        // ---------------------------------------------
-        // Create booking
-        // ---------------------------------------------
+        // -------------------------------------------------
+        // CREATE BOOKING
+        // -------------------------------------------------
 
-        const booking = await Booking.create({
+        const booking =
+            await Booking.create({
 
-            customer: req.user._id,
+                customer:
+                    req.user._id,
 
-            owner: pod.owner,
+                owner:
+                    pod.owner,
 
-            pod: pod._id,
+                pod:
+                    pod._id,
 
-            bookingDate: selectedDate,
+                bookingDate:
+                    bookingStart,
 
-            startTime,
+                startTime,
 
-            endTime,
+                endTime,
 
-            duration: durationHours,
+                duration:
+                    durationHours,
 
-            hourlyPrice: pod.hourlyPrice,
+                hourlyPrice:
+                    pod.hourlyPrice,
 
-            subtotal,
+                subtotal,
 
-            bookingStatus: "Pending",
+                bookingStatus:
+                    "Pending",
 
-            paymentStatus: "Pending"
+                paymentStatus:
+                    "Pending"
 
-        });
+            });
 
 
-        // ---------------------------------------------
-        // Calculate GST
-        // ---------------------------------------------
+        // -------------------------------------------------
+        // GST
+        // -------------------------------------------------
 
         const gst =
             calculateGST(subtotal);
 
 
-        // ---------------------------------------------
-        // Generate bill
-        // ---------------------------------------------
+        // -------------------------------------------------
+        // BILL
+        // -------------------------------------------------
 
-        const bill = await Bill.create({
+        const bill =
+            await Bill.create({
 
-            booking: booking._id,
+                booking:
+                    booking._id,
 
-            customer: booking.customer,
+                customer:
+                    booking.customer,
 
-            owner: booking.owner,
+                owner:
+                    booking.owner,
 
-            pod: booking.pod,
+                pod:
+                    booking.pod,
 
-            bookingDate: booking.bookingDate,
+                bookingDate:
+                    booking.bookingDate,
 
-            invoiceNumber: generateInvoice(),
+                invoiceNumber:
+                    generateInvoice(),
 
-            subtotal: booking.subtotal,
+                subtotal:
+                    booking.subtotal,
 
-            gstRate: gst.gstRate,
+                gstRate:
+                    gst.gstRate,
 
-            gstAmount: gst.gstAmount,
+                gstAmount:
+                    gst.gstAmount,
 
-            platformFee: gst.platformFee,
+                platformFee:
+                    gst.platformFee,
 
-            totalAmount: gst.totalAmount,
+                totalAmount:
+                    gst.totalAmount,
 
-            paymentStatus: "Pending"
+                paymentStatus:
+                    "Pending"
 
-        });
+            });
 
 
-        // ---------------------------------------------
-        // Response
-        // ---------------------------------------------
+        // -------------------------------------------------
+        // RESPONSE
+        // -------------------------------------------------
 
         return res.status(201).json({
 
             success: true,
 
-            message: "Booking created successfully",
+            message:
+                "Booking created successfully",
 
             booking,
 
@@ -348,7 +438,7 @@ exports.createBooking = async (req, res) => {
     } catch (error) {
 
         console.error(
-            "Create Booking Error:",
+            "CREATE BOOKING ERROR:",
             error
         );
 
@@ -359,44 +449,57 @@ exports.createBooking = async (req, res) => {
             message:
                 "Something went wrong while creating booking",
 
-            error: error.message
+            error:
+                error.message
 
         });
 
     }
+
 };
 
 
-
-// ====================================================
+// =====================================================
 // GET CUSTOMER BOOKINGS
-// ====================================================
+// GET /api/bookings/my-bookings
+// =====================================================
 
-exports.getMyBookings = async (req, res) => {
+exports.getMyBookings = async (
+    req,
+    res
+) => {
 
     try {
 
-        const bookings = await Booking.find({
-            customer: req.user._id
-        })
-            .populate(
-                "pod",
-                "podName location city state hourlyPrice images"
-            )
-            .populate(
-                "owner",
-                "name email"
-            )
-            .sort({
-                createdAt: -1
-            });
+        const bookings =
+            await Booking.find({
+
+                customer:
+                    req.user._id
+
+            })
+
+                .populate(
+                    "pod",
+                    "podName description location city state hourlyPrice images"
+                )
+
+                .populate(
+                    "owner",
+                    "name email"
+                )
+
+                .sort({
+                    createdAt: -1
+                });
 
 
         return res.status(200).json({
 
             success: true,
 
-            count: bookings.length,
+            count:
+                bookings.length,
 
             bookings
 
@@ -406,7 +509,7 @@ exports.getMyBookings = async (req, res) => {
     } catch (error) {
 
         console.error(
-            "Get My Bookings Error:",
+            "GET MY BOOKINGS ERROR:",
             error
         );
 
@@ -417,26 +520,66 @@ exports.getMyBookings = async (req, res) => {
             message:
                 "Unable to fetch your bookings",
 
-            error: error.message
+            error:
+                error.message
 
         });
 
     }
+
 };
 
 
-// ====================================================
-// CANCEL BOOKING
-// ====================================================
+// =====================================================
+// GET SINGLE BOOKING
+// GET /api/bookings/:id
+// =====================================================
 
-exports.cancelBooking = async (req, res) => {
+exports.getBookingById = async (
+    req,
+    res
+) => {
 
     try {
 
+        const {
+            id
+        } = req.params;
+
+
+        if (
+            !mongoose.Types.ObjectId.isValid(id)
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Invalid booking ID"
+
+            });
+
+        }
+
+
         const booking =
-            await Booking.findById(
-                req.params.id
-            );
+            await Booking.findById(id)
+
+                .populate(
+                    "pod",
+                    "podName description location city state hourlyPrice images"
+                )
+
+                .populate(
+                    "customer",
+                    "name email"
+                )
+
+                .populate(
+                    "owner",
+                    "name email"
+                );
 
 
         if (!booking) {
@@ -445,24 +588,147 @@ exports.cancelBooking = async (req, res) => {
 
                 success: false,
 
-                message: "Booking not found"
+                message:
+                    "Booking not found"
 
             });
 
         }
 
 
-        // ---------------------------------------------
-        // Only customer / owner / admin
-        // ---------------------------------------------
+        const userId =
+            req.user._id.toString();
+
+
+        const isCustomer =
+            booking.customer._id.toString() ===
+            userId;
+
+
+        const isOwner =
+            booking.owner._id.toString() ===
+            userId;
+
+
+        const isAdmin =
+            req.user.role === "admin";
+
+
+        if (
+            !isCustomer &&
+            !isOwner &&
+            !isAdmin
+        ) {
+
+            return res.status(403).json({
+
+                success: false,
+
+                message:
+                    "You are not authorized to view this booking"
+
+            });
+
+        }
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            booking
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "GET BOOKING ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Unable to fetch booking",
+
+            error:
+                error.message
+
+        });
+
+    }
+
+};
+
+
+// =====================================================
+// CANCEL BOOKING
+// PATCH /api/bookings/:id/cancel
+// =====================================================
+
+exports.cancelBooking = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const {
+            id
+        } = req.params;
+
+
+        if (
+            !mongoose.Types.ObjectId.isValid(id)
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Invalid booking ID"
+
+            });
+
+        }
+
+
+        const booking =
+            await Booking.findById(id);
+
+
+        if (!booking) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Booking not found"
+
+            });
+
+        }
+
+
+        const userId =
+            req.user._id.toString();
+
 
         const isCustomer =
             booking.customer.toString() ===
-            req.user._id.toString();
+            userId;
+
 
         const isOwner =
             booking.owner.toString() ===
-            req.user._id.toString();
+            userId;
+
 
         const isAdmin =
             req.user.role === "admin";
@@ -486,10 +752,6 @@ exports.cancelBooking = async (req, res) => {
         }
 
 
-        // ---------------------------------------------
-        // Already cancelled
-        // ---------------------------------------------
-
         if (
             booking.bookingStatus ===
             "Cancelled"
@@ -506,10 +768,6 @@ exports.cancelBooking = async (req, res) => {
 
         }
 
-
-        // ---------------------------------------------
-        // Completed booking cannot be cancelled
-        // ---------------------------------------------
 
         if (
             booking.bookingStatus ===
@@ -532,9 +790,6 @@ exports.cancelBooking = async (req, res) => {
             "Cancelled";
 
 
-        // Payment will be handled in Batch 6
-        // For now keep payment status unchanged.
-
         await booking.save();
 
 
@@ -553,7 +808,7 @@ exports.cancelBooking = async (req, res) => {
     } catch (error) {
 
         console.error(
-            "Cancel Booking Error:",
+            "CANCEL BOOKING ERROR:",
             error
         );
 
@@ -564,145 +819,254 @@ exports.cancelBooking = async (req, res) => {
             message:
                 "Unable to cancel booking",
 
-            error: error.message
+            error:
+                error.message
 
         });
 
     }
+
 };
 
-// ====================================================
-// GET OWNER BOOKINGS
-// ====================================================
 
-exports.getOwnerBookings = async (req, res) => {
+// =====================================================
+// GET OWNER BOOKINGS
+// GET /api/bookings/owner-bookings
+// =====================================================
+
+exports.getOwnerBookings = async (
+    req,
+    res
+) => {
+
     try {
 
-        // Only owners should use this endpoint
-        if (req.user.role !== "owner") {
+        if (
+            req.user.role !== "owner" &&
+            req.user.role !== "admin"
+        ) {
+
             return res.status(403).json({
+
                 success: false,
-                message: "Only owners can view owner bookings"
+
+                message:
+                    "Only owners and admins can view owner bookings"
+
             });
+
         }
 
-        const bookings = await Booking.find({
-            owner: req.user._id
-        })
-            .populate(
-                "pod",
-                "podName location city state hourlyPrice images"
-            )
-            .populate(
-                "customer",
-                "name email"
-            )
-            .sort({
-                createdAt: -1
-            });
+
+        const filter =
+            req.user.role === "admin"
+                ? {}
+                : {
+                    owner:
+                        req.user._id
+                };
+
+
+        const bookings =
+            await Booking.find(filter)
+
+                .populate(
+                    "pod",
+                    "podName description location city state hourlyPrice images"
+                )
+
+                .populate(
+                    "customer",
+                    "name email"
+                )
+
+                .populate(
+                    "owner",
+                    "name email"
+                )
+
+                .sort({
+                    createdAt: -1
+                });
+
 
         return res.status(200).json({
+
             success: true,
-            count: bookings.length,
+
+            count:
+                bookings.length,
+
             bookings
+
         });
+
 
     } catch (error) {
 
         console.error(
-            "Get Owner Bookings Error:",
+            "GET OWNER BOOKINGS ERROR:",
             error
         );
 
         return res.status(500).json({
+
             success: false,
-            message: "Unable to fetch owner bookings",
-            error: error.message
+
+            message:
+                "Unable to fetch owner bookings",
+
+            error:
+                error.message
+
         });
+
     }
+
 };
 
 
-// ====================================================
+// =====================================================
 // GET OWNER EARNINGS
-// ====================================================
+// GET /api/bookings/owner-earnings
+// =====================================================
 
-exports.getOwnerEarnings = async (req, res) => {
+exports.getOwnerEarnings = async (
+    req,
+    res
+) => {
+
     try {
 
-        // Only owners should use this endpoint
-        if (req.user.role !== "owner") {
+        if (
+            req.user.role !== "owner" &&
+            req.user.role !== "admin"
+        ) {
+
             return res.status(403).json({
+
                 success: false,
-                message: "Only owners can view earnings"
+
+                message:
+                    "Only owners and admins can view earnings"
+
             });
+
         }
 
-        const bookings = await Booking.find({
-            owner: req.user._id,
-            bookingStatus: {
-                $in: [
-                    "Pending",
-                    "Confirmed",
+
+        const filter =
+            req.user.role === "admin"
+                ? {}
+                : {
+                    owner:
+                        req.user._id
+                };
+
+
+        const bookings =
+            await Booking.find({
+
+                ...filter,
+
+                bookingStatus: {
+                    $in: [
+                        "Pending",
+                        "Confirmed",
+                        "Completed"
+                    ]
+                }
+
+            });
+
+
+        const totalBookings =
+            bookings.length;
+
+
+        const totalEarnings =
+            bookings.reduce(
+                (
+                    total,
+                    booking
+                ) => {
+
+                    return (
+                        total +
+                        Number(
+                            booking.subtotal || 0
+                        )
+                    );
+
+                },
+                0
+            );
+
+
+        const completedBookings =
+            bookings.filter(
+                booking =>
+                    booking.bookingStatus ===
                     "Completed"
-                ]
-            }
-        });
+            ).length;
 
-        // ------------------------------------------------
-        // Calculate earnings
-        // ------------------------------------------------
 
-        const totalBookings = bookings.length;
+        const confirmedBookings =
+            bookings.filter(
+                booking =>
+                    booking.bookingStatus ===
+                    "Confirmed"
+            ).length;
 
-        const totalEarnings = bookings.reduce(
-            (total, booking) => {
-                return total + Number(
-                    booking.subtotal || 0
-                );
-            },
-            0
-        );
 
-        const completedBookings = bookings.filter(
-            booking =>
-                booking.bookingStatus === "Completed"
-        ).length;
-
-        const confirmedBookings = bookings.filter(
-            booking =>
-                booking.bookingStatus === "Confirmed"
-        ).length;
-
-        const pendingBookings = bookings.filter(
-            booking =>
-                booking.bookingStatus === "Pending"
-        ).length;
+        const pendingBookings =
+            bookings.filter(
+                booking =>
+                    booking.bookingStatus ===
+                    "Pending"
+            ).length;
 
 
         return res.status(200).json({
+
             success: true,
 
             earnings: {
+
                 totalEarnings,
+
                 totalBookings,
+
                 completedBookings,
+
                 confirmedBookings,
+
                 pendingBookings
+
             }
+
         });
+
 
     } catch (error) {
 
         console.error(
-            "Get Owner Earnings Error:",
+            "GET OWNER EARNINGS ERROR:",
             error
         );
 
         return res.status(500).json({
+
             success: false,
-            message: "Unable to fetch owner earnings",
-            error: error.message
+
+            message:
+                "Unable to fetch owner earnings",
+
+            error:
+                error.message
+
         });
+
     }
+
 };
