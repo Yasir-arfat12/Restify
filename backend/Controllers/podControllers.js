@@ -1,875 +1,585 @@
+const BookPod = require("../models/BookPods");
 const Booking = require("../models/Booking");
-const Pod = require("../models/BookPods");
 
-
-// =====================================================
-// CREATE POD
-// =====================================================
-
-
-
-exports.createdPod = async (req, res) => {
-
-    try {
-
-        const pod = await Pod.create({
-
-            owner: req.user._id,
-
-            podName: req.body.podName,
-
-            description: req.body.description,
-
-            location: req.body.location,
-
-            city: req.body.city,
-
-            state: req.body.state,
-
-            hourlyPrice: req.body.hourlyPrice,
-
-            dayPrice: req.body.dayPrice,
-
-            capacity: req.body.capacity,
-
-            amenities: req.body.amenities,
-
-            images: req.body.images
-
-        });
-
-
-        return res.status(201).json({
-
-            success: true,
-
-            pod
-
-        });
-
-    } catch (error) {
-
-        console.error("CREATE POD ERROR:", error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: error.message
-
-        });
-
-    }
+// --------------------------------------------------
+// Helper: escape regex special characters
+// --------------------------------------------------
+const escapeRegex = (value = "") => {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
 
+// --------------------------------------------------
+// Helper: create case-insensitive exact-ish regex
+// --------------------------------------------------
+const createRegex = (value) => {
+    if (!value) return null;
 
-// =====================================================
-// GET ALL PODS
-// =====================================================
-
-exports.getPods = async (req, res) => {
-
-    try {
-
-        const pods = await Pod.find()
-            .populate("owner", "name email");
-
-        // Keep this response as an array
-        // because other parts of the application
-        // may already depend on it.
-
-        return res.json(pods);
-
-    } catch (error) {
-
-        console.error("GET PODS ERROR:", error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: error.message
-
-        });
-
-    }
+    return new RegExp(
+        `^${escapeRegex(value.trim())}$`,
+        "i"
+    );
 };
 
+// --------------------------------------------------
+// City aliases
+// --------------------------------------------------
+const CITY_ALIASES = {
+    bangalore: ["bangalore", "bengaluru"],
+    bengaluru: ["bangalore", "bengaluru"],
 
-// =====================================================
-// GET MY PODS
-// =====================================================
+    bombay: ["bombay", "mumbai"],
+    mumbai: ["bombay", "mumbai"],
 
-exports.getMyPods = async (req, res) => {
+    calcutta: ["calcutta", "kolkata"],
+    kolkata: ["calcutta", "kolkata"],
 
-    try {
+    madras: ["madras", "chennai"],
+    chennai: ["madras", "chennai"],
 
-        const pods = await Pod.find({
-
-            owner: req.user._id
-
-        });
-
-        return res.json(pods);
-
-    } catch (error) {
-
-        console.error("GET MY PODS ERROR:", error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: error.message
-
-        });
-
-    }
+    delhi: ["delhi", "new delhi"],
+    "new delhi": ["delhi", "new delhi"]
 };
 
-
-// =====================================================
-// UPDATE POD
-// =====================================================
-
-exports.UpdatePod = async (req, res) => {
-
-    try {
-
-        const pod = await Pod.findById(req.params.id);
-
-
-        if (!pod) {
-
-            return res.status(404).json({
-
-                success: false,
-
-                message: "Pod Not Found"
-
-            });
-
-        }
-
-
-        // Admin can update any pod.
-        // Owner can update only their own pod.
-
-        if (
-
-            req.user.role !== "admin" &&
-
-            pod.owner.toString() !== req.user._id.toString()
-
-        ) {
-
-            return res.status(403).json({
-
-                success: false,
-
-                message: "Access Denied"
-
-            });
-
-        }
-
-
-        if (req.body.podName !== undefined) {
-
-            pod.podName = req.body.podName;
-
-        }
-
-
-        if (req.body.description !== undefined) {
-
-            pod.description = req.body.description;
-
-        }
-
-
-        if (req.body.location !== undefined) {
-
-            pod.location = req.body.location;
-
-        }
-
-
-        if (req.body.city !== undefined) {
-
-            pod.city = req.body.city;
-
-        }
-
-
-        if (req.body.state !== undefined) {
-
-            pod.state = req.body.state;
-
-        }
-
-
-        if (req.body.hourlyPrice !== undefined) {
-
-            pod.hourlyPrice = req.body.hourlyPrice;
-
-        }
-
-
-        if (req.body.dayPrice !== undefined) {
-
-            pod.dayPrice = req.body.dayPrice;
-
-        }
-
-
-        if (req.body.capacity !== undefined) {
-
-            pod.capacity = req.body.capacity;
-
-        }
-
-
-        if (req.body.amenities !== undefined) {
-
-            pod.amenities = req.body.amenities;
-
-        }
-
-
-        if (req.body.images !== undefined) {
-
-            pod.images = req.body.images;
-
-        }
-
-
-        await pod.save();
-
-
-        return res.json({
-
-            success: true,
-
-            pod
-
-        });
-
-    } catch (error) {
-
-        console.error("UPDATE POD ERROR:", error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: error.message
-
-        });
-
-    }
-};
-
-
-// =====================================================
-// DELETE POD
-// =====================================================
-
-exports.DeletePods = async (req, res) => {
-
-    try {
-
-        const pod = await Pod.findById(req.params.id);
-
-
-        if (!pod) {
-
-            return res.status(404).json({
-
-                success: false,
-
-                message: "Pod Not Found"
-
-            });
-
-        }
-
-
-        // Admin can delete any pod.
-        // Owner can delete only their own pod.
-
-        if (
-
-            req.user.role !== "admin" &&
-
-            pod.owner.toString() !== req.user._id.toString()
-
-        ) {
-
-            return res.status(403).json({
-
-                success: false,
-
-                message: "Access Denied"
-
-            });
-
-        }
-
-
-        await pod.deleteOne();
-
-
-        return res.json({
-
-            success: true,
-
-            message: "Pod Deleted"
-
-        });
-
-    } catch (error) {
-
-        console.error("DELETE POD ERROR:", error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: error.message
-
-        });
-
-    }
-};
-
-
-// =====================================================
-// SEARCH PODS
-// =====================================================
-//
-// Supported query parameters:
-//
-// state
-// city
-// location
-// podName
-// minPrice
-// maxPrice
-// capacity
-// bookingDate
-// startTime
-// endTime
-//
-// Example:
-//
-// /api/pods/search?city=Bengaluru
-//
-// /api/pods/search?city=Bengaluru&maxPrice=500
-//
-// /api/pods/search?capacity=4
-//
-// =====================================================
-
-exports.searchPods = async (req, res) => {
-
-    try {
-
-        const {
-
-            state,
-
-            city,
-
-            location,
-
-            podName,
-
-            minPrice,
-
-            maxPrice,
-
-            capacity,
-
-            bookingDate,
-
-            startTime,
-
-            endTime
-
-        } = req.query;
-
-
-        // =================================================
-        // BASE FILTER
-        // =================================================
-
-        const filter = {
-
-            status: "Available"
-
-        };
-
-
-        // =================================================
-        // STATE
-        // =================================================
-
-        if (
-
-            state !== undefined &&
-
-            state.trim() !== ""
-
-        ) {
-
-            filter.state = {
-
-                $regex: state.trim(),
-
-                $options: "i"
-
-            };
-
-        }
-
-
-        // =================================================
-        // CITY
-        // =================================================
-
-        if (
-
-            city !== undefined &&
-
-            city.trim() !== ""
-
-        ) {
-
-            filter.city = {
-
-                $regex: city.trim(),
-
-                $options: "i"
-
-            };
-
-        }
-
-
-        // =================================================
-        // LOCATION
-        // =================================================
-
-        if (
-
-            location !== undefined &&
-
-            location.trim() !== ""
-
-        ) {
-
-            filter.location = {
-
-                $regex: location.trim(),
-
-                $options: "i"
-
-            };
-
-        }
-
-
-        // =================================================
-        // POD NAME
-        // =================================================
-
-        if (
-
-            podName !== undefined &&
-
-            podName.trim() !== ""
-
-        ) {
-
-            filter.podName = {
-
-                $regex: podName.trim(),
-
-                $options: "i"
-
-            };
-
-        }
-
-
-        // =================================================
-        // CAPACITY
-        // =================================================
-
-        if (
-
-            capacity !== undefined &&
-
-            capacity !== ""
-
-        ) {
-
-            const capacityNumber = Number(capacity);
-
-
-            if (Number.isNaN(capacityNumber)) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message: "Capacity must be a valid number"
-
-                });
-
-            }
-
-
-            filter.capacity = {
-
-                $gte: capacityNumber
-
-            };
-
-        }
-
-
-        // =================================================
-        // PRICE
-        // =================================================
-
-        if (
-
-            (minPrice !== undefined && minPrice !== "") ||
-
-            (maxPrice !== undefined && maxPrice !== "")
-
-        ) {
-
-            filter.hourlyPrice = {};
-
-
-            if (
-
-                minPrice !== undefined &&
-
-                minPrice !== ""
-
-            ) {
-
-                const minimumPrice = Number(minPrice);
-
-
-                if (Number.isNaN(minimumPrice)) {
-
-                    return res.status(400).json({
-
-                        success: false,
-
-                        message: "Minimum price must be a valid number"
-
-                    });
-
-                }
-
-
-                filter.hourlyPrice.$gte = minimumPrice;
-
-            }
-
-
-            if (
-
-                maxPrice !== undefined &&
-
-                maxPrice !== ""
-
-            ) {
-
-                const maximumPrice = Number(maxPrice);
-
-
-                if (Number.isNaN(maximumPrice)) {
-
-                    return res.status(400).json({
-
-                        success: false,
-
-                        message: "Maximum price must be a valid number"
-
-                    });
-
-                }
-
-
-                filter.hourlyPrice.$lte = maximumPrice;
-
-            }
-
-        }
-
-
-        // =================================================
-        // FIND PODS
-        // =================================================
-
-        let pods = await Pod.find(filter)
-
-            .populate("owner", "name email")
-
-            .sort({
-
-                hourlyPrice: 1
-
-            });
-
-
-        // =================================================
-        // DATE + TIME AVAILABILITY
-        // =================================================
-
-        if (
-
-            bookingDate &&
-
-            startTime &&
-
-            endTime
-
-        ) {
-
-            const requestedStart = timeToMinutes(startTime);
-
-            const requestedEnd = timeToMinutes(endTime);
-
-
-            if (
-
-                requestedStart === null ||
-
-                requestedEnd === null
-
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message: "Time must be in HH:mm format"
-
-                });
-
-            }
-
-
-            if (requestedEnd <= requestedStart) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message: "End time must be after start time"
-
-                });
-
-            }
-
-
-            const bookingDay = new Date(bookingDate);
-
-
-            if (Number.isNaN(bookingDay.getTime())) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message: "Invalid booking date"
-
-                });
-
-            }
-
-
-            // Get active bookings for the selected date
-
-            const activeBookings = await Booking.find({
-
-                bookingDate: bookingDay,
-
-                bookingStatus: {
-
-                    $in: [
-
-                        "Pending",
-
-                        "Confirmed"
-
-                    ]
-
-                },
-
-                pod: {
-
-                    $in: pods.map(
-
-                        pod => pod._id
-
-                    )
-
-                }
-
-            }).select(
-
-                "pod startTime endTime"
-
-            );
-
-
-            const bookedPodIds = new Set();
-
-
-            for (const booking of activeBookings) {
-
-                const bookedStart = timeToMinutes(
-
-                    booking.startTime
-
-                );
-
-
-                const bookedEnd = timeToMinutes(
-
-                    booking.endTime
-
-                );
-
-
-                if (
-
-                    bookedStart === null ||
-
-                    bookedEnd === null
-
-                ) {
-
-                    continue;
-
-                }
-
-
-                const overlaps =
-
-                    requestedStart < bookedEnd &&
-
-                    requestedEnd > bookedStart;
-
-
-                if (overlaps) {
-
-                    bookedPodIds.add(
-
-                        booking.pod.toString()
-
-                    );
-
-                }
-
-            }
-
-
-            pods = pods.filter(
-
-                pod =>
-
-                    !bookedPodIds.has(
-
-                        pod._id.toString()
-
-                    )
-
-            );
-
-        }
-
-
-        // =================================================
-        // RESPONSE
-        // =================================================
-
-        return res.json({
-
-            success: true,
-
-            count: pods.length,
-
-            pods
-
-        });
-
-    } catch (error) {
-
-        console.error("SEARCH PODS ERROR:", error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: error.message
-
-        });
-
+// --------------------------------------------------
+// Helper: convert HH:mm into minutes
+// --------------------------------------------------
+const timeToMinutes = (time) => {
+    if (!time) return null;
+
+    const parts = time.split(":");
+
+    if (parts.length !== 2) {
+        return null;
     }
 
-};
-
-
-// =====================================================
-// TIME HELPER
-// =====================================================
-
-function timeToMinutes(time) {
+    const hours = Number(parts[0]);
+    const minutes = Number(parts[1]);
 
     if (
-
-        typeof time !== "string" ||
-
-        !/^([01]\d|2[0-3]):([0-5]\d)$/.test(time)
-
+        Number.isNaN(hours) ||
+        Number.isNaN(minutes) ||
+        hours < 0 ||
+        hours > 23 ||
+        minutes < 0 ||
+        minutes > 59
     ) {
-
         return null;
-
     }
 
+    return hours * 60 + minutes;
+};
 
-    const [
+// --------------------------------------------------
+// GET ALL PODS
+// --------------------------------------------------
+const getPods = async (req, res) => {
+    try {
+        const pods = await BookPod.find({
+            status: "Available"
+        }).populate(
+            "owner",
+            "name email"
+        );
 
-        hours,
+        res.status(200).json({
+            success: true,
+            count: pods.length,
+            pods
+        });
 
-        minutes
+    } catch (error) {
+        console.error("GET PODS ERROR:", error);
 
-    ] = time.split(":").map(Number);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch pods",
+            error: error.message
+        });
+    }
+};
 
-
-    return (
-
-        hours * 60 +
-
-        minutes
-
-    );
-
-}
-
-// ======================================================
+// --------------------------------------------------
 // GET MY PODS
-// OWNER ONLY
-// ======================================================
+// --------------------------------------------------
+const getMyPods = async (req, res) => {
+    try {
+        const pods = await BookPod.find({
+            owner: req.user._id
+        }).populate(
+            "owner",
+            "name email"
+        );
 
+        res.status(200).json({
+            success: true,
+            count: pods.length,
+            pods
+        });
+
+    } catch (error) {
+        console.error("GET MY PODS ERROR:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch your pods",
+            error: error.message
+        });
+    }
+};
+
+// --------------------------------------------------
+// CREATE POD
+// --------------------------------------------------
+const createdPod = async (req, res) => {
+    try {
+        const {
+            podName,
+            description,
+            location,
+            city,
+            state,
+            hourlyPrice,
+            dayPrice,
+            capacity,
+            amenities,
+            images
+        } = req.body;
+
+        if (
+            !podName ||
+            !description ||
+            !location ||
+            !city ||
+            !state ||
+            hourlyPrice === undefined ||
+            dayPrice === undefined ||
+            capacity === undefined
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide all required pod details"
+            });
+        }
+
+        const pod = await BookPod.create({
+            owner: req.user._id,
+            podName,
+            description,
+            location,
+            city,
+            state,
+            hourlyPrice,
+            dayPrice,
+            capacity,
+            amenities: amenities || [],
+            images: images || [],
+            status: "Available"
+        });
+
+        res.status(201).json({
+            success: true,
+            message: "Pod created successfully",
+            pod
+        });
+
+    } catch (error) {
+        console.error("CREATE POD ERROR:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to create pod",
+            error: error.message
+        });
+    }
+};
+
+// --------------------------------------------------
+// UPDATE POD
+// --------------------------------------------------
+const UpdatePod = async (req, res) => {
+    try {
+        const pod = await BookPod.findById(req.params.id);
+
+        if (!pod) {
+            return res.status(404).json({
+                success: false,
+                message: "Pod not found"
+            });
+        }
+
+        if (
+            req.user.role !== "admin" &&
+            pod.owner.toString() !== req.user._id.toString()
+        ) {
+            return res.status(403).json({
+                success: false,
+                message: "Not authorized to update this pod"
+            });
+        }
+
+        const updatedPod = await BookPod.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Pod updated successfully",
+            pod: updatedPod
+        });
+
+    } catch (error) {
+        console.error("UPDATE POD ERROR:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to update pod",
+            error: error.message
+        });
+    }
+};
+
+// --------------------------------------------------
+// DELETE POD
+// --------------------------------------------------
+const DeletePods = async (req, res) => {
+    try {
+        const pod = await BookPod.findById(req.params.id);
+
+        if (!pod) {
+            return res.status(404).json({
+                success: false,
+                message: "Pod not found"
+            });
+        }
+
+        if (
+            req.user.role !== "admin" &&
+            pod.owner.toString() !== req.user._id.toString()
+        ) {
+            return res.status(403).json({
+                success: false,
+                message: "Not authorized to delete this pod"
+            });
+        }
+
+        await BookPod.findByIdAndDelete(req.params.id);
+
+        res.status(200).json({
+            success: true,
+            message: "Pod deleted successfully"
+        });
+
+    } catch (error) {
+        console.error("DELETE POD ERROR:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete pod",
+            error: error.message
+        });
+    }
+};
+
+// --------------------------------------------------
+// SEARCH PODS
+// --------------------------------------------------
+const searchPods = async (req, res) => {
+    try {
+        const {
+            state,
+            city,
+            location,
+            podName,
+            minPrice,
+            maxPrice,
+            capacity,
+            bookingDate,
+            startTime,
+            endTime
+        } = req.query;
+
+        console.log("\n======================================");
+        console.log("POD SEARCH REQUEST");
+        console.log("======================================");
+        console.log("state:", state);
+        console.log("city:", city);
+        console.log("location:", location);
+        console.log("podName:", podName);
+        console.log("minPrice:", minPrice);
+        console.log("maxPrice:", maxPrice);
+        console.log("capacity:", capacity);
+        console.log("bookingDate:", bookingDate);
+        console.log("startTime:", startTime);
+        console.log("endTime:", endTime);
+
+        // ------------------------------------------
+        // Start with available pods
+        // ------------------------------------------
+        const filter = {
+            status: "Available"
+        };
+
+        // ------------------------------------------
+        // STATE FILTER
+        // ------------------------------------------
+        if (state && state.trim()) {
+            filter.state = createRegex(state);
+        }
+
+        // ------------------------------------------
+        // CITY FILTER
+        // Handles:
+        // Bangalore <-> Bengaluru
+        // Mumbai <-> Bombay
+        // etc.
+        // ------------------------------------------
+        if (city && city.trim()) {
+            const normalizedCity = city
+                .trim()
+                .toLowerCase();
+
+            const aliases =
+                CITY_ALIASES[normalizedCity];
+
+            if (aliases) {
+                filter.city = {
+                    $in: aliases.map(
+                        (item) => createRegex(item)
+                    )
+                };
+            } else {
+                filter.city = createRegex(city);
+            }
+        }
+
+        // ------------------------------------------
+        // LOCATION FILTER
+        // ------------------------------------------
+        if (location && location.trim()) {
+            filter.location = {
+                $regex: escapeRegex(location.trim()),
+                $options: "i"
+            };
+        }
+
+        // ------------------------------------------
+        // POD NAME FILTER
+        // ------------------------------------------
+        if (podName && podName.trim()) {
+            filter.podName = {
+                $regex: escapeRegex(podName.trim()),
+                $options: "i"
+            };
+        }
+
+        // ------------------------------------------
+        // MIN PRICE
+        // ------------------------------------------
+        if (
+            minPrice !== undefined &&
+            minPrice !== ""
+        ) {
+            filter.hourlyPrice = {
+                ...(filter.hourlyPrice || {}),
+                $gte: Number(minPrice)
+            };
+        }
+
+        // ------------------------------------------
+        // MAX PRICE
+        // ------------------------------------------
+        if (
+            maxPrice !== undefined &&
+            maxPrice !== ""
+        ) {
+            filter.hourlyPrice = {
+                ...(filter.hourlyPrice || {}),
+                $lte: Number(maxPrice)
+            };
+        }
+
+        // ------------------------------------------
+        // CAPACITY
+        // ------------------------------------------
+        if (
+            capacity !== undefined &&
+            capacity !== ""
+        ) {
+            filter.capacity = {
+                $gte: Number(capacity)
+            };
+        }
+
+        console.log(
+            "MONGODB FILTER:",
+            JSON.stringify(filter, null, 2)
+        );
+
+        // ------------------------------------------
+        // FETCH PODS
+        // ------------------------------------------
+        let pods = await BookPod.find(filter)
+            .populate(
+                "owner",
+                "name email"
+            )
+            .lean();
+
+        console.log(
+            "PODS AFTER BASIC FILTER:",
+            pods.length
+        );
+
+        // ------------------------------------------
+        // BOOKING AVAILABILITY FILTER
+        // Only run when complete booking details exist
+        // ------------------------------------------
+        if (
+            bookingDate &&
+            startTime &&
+            endTime
+        ) {
+            const requestedStart =
+                timeToMinutes(startTime);
+
+            const requestedEnd =
+                timeToMinutes(endTime);
+
+            if (
+                requestedStart === null ||
+                requestedEnd === null
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Invalid time format. Use HH:mm."
+                });
+            }
+
+            if (requestedEnd <= requestedStart) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "End time must be after start time."
+                });
+            }
+
+            // --------------------------------------
+            // Find bookings for selected date
+            // --------------------------------------
+            const bookings = await Booking.find({
+                bookingDate: bookingDate,
+                status: {
+                    $in: [
+                        "Pending",
+                        "Confirmed"
+                    ]
+                }
+            }).lean();
+
+            console.log(
+                "BOOKINGS ON DATE:",
+                bookings.length
+            );
+
+            // --------------------------------------
+            // Find unavailable pod IDs
+            // --------------------------------------
+            const unavailablePodIds =
+                new Set();
+
+            for (const booking of bookings) {
+                if (
+                    !booking.startTime ||
+                    !booking.endTime
+                ) {
+                    continue;
+                }
+
+                const bookedStart =
+                    timeToMinutes(
+                        booking.startTime
+                    );
+
+                const bookedEnd =
+                    timeToMinutes(
+                        booking.endTime
+                    );
+
+                if (
+                    bookedStart === null ||
+                    bookedEnd === null
+                ) {
+                    continue;
+                }
+
+                // Two time ranges overlap when:
+                // requestedStart < bookedEnd
+                // AND requestedEnd > bookedStart
+                const overlaps =
+                    requestedStart < bookedEnd &&
+                    requestedEnd > bookedStart;
+
+                if (overlaps && booking.pod) {
+                    unavailablePodIds.add(
+                        booking.pod.toString()
+                    );
+                }
+            }
+
+            // --------------------------------------
+            // Remove unavailable pods
+            // --------------------------------------
+            pods = pods.filter(
+                (pod) =>
+                    !unavailablePodIds.has(
+                        pod._id.toString()
+                    )
+            );
+
+            console.log(
+                "PODS AFTER AVAILABILITY FILTER:",
+                pods.length
+            );
+        }
+
+        console.log(
+            "FINAL POD COUNT:",
+            pods.length
+        );
+
+        console.log("======================================\n");
+
+        return res.status(200).json({
+            success: true,
+            count: pods.length,
+            pods
+        });
+
+    } catch (error) {
+        console.error(
+            "SEARCH PODS ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to search pods",
+            error: error.message
+        });
+    }
+};
+
+module.exports = {
+    getPods,
+    getMyPods,
+    createdPod,
+    UpdatePod,
+    DeletePods,
+    searchPods
+};
