@@ -5,7 +5,7 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 
 const UserRoutes = require("./routes/UserRoutes");
-const PodRoutes = require("./routes/podRoutes");
+const PodRoutes = require("./routes/PodRoutes");
 const BookingRoutes = require("./routes/BookingRoutes");
 const BillRoutes = require("./routes/BillRoutes");
 const PartnerRoutes = require("./routes/PartnerRoutes");

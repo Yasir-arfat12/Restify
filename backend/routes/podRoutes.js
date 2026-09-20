@@ -13,6 +13,7 @@ const {
 const {
     createdPod,
     getPods,
+    getPodById,
     getMyPods,
     UpdatePod,
     DeletePods,
@@ -45,20 +46,6 @@ router.get(
 
 
 // =====================================================
-// CREATE POD
-// OWNER / ADMIN
-// POST /api/pods/create-pod
-// =====================================================
-
-router.post(
-    "/create-pod",
-    protect,
-    authorize("owner", "admin"),
-    createdPod
-);
-
-
-// =====================================================
 // GET MY PODS
 // OWNER
 // GET /api/pods/myPods
@@ -69,6 +56,32 @@ router.get(
     protect,
     authorize("owner"),
     getMyPods
+);
+
+
+// =====================================================
+// GET SINGLE POD
+// PUBLIC
+// GET /api/pods/:id
+// =====================================================
+
+router.get(
+    "/:id",
+    getPodById
+);
+
+
+// =====================================================
+// CREATE POD
+// OWNER / ADMIN
+// POST /api/pods/create-pod
+// =====================================================
+
+router.post(
+    "/create-pod",
+    protect,
+    authorize("owner", "admin"),
+    createdPod
 );
 
 

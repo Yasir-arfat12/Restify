@@ -27,7 +27,7 @@ import AdminDashboard from "./components/pages/AdminDashboard";
 import OurPods from "./components/Pods/OurPods";
 import SearchPods from "./components/Pods/SearchPods";
 import PodManagement from "./components/Pods/PodManagement";
-
+import PodDetails from "./components/Pods/PodDetails";
 /*
   Protects routes that require a logged-in user.
 */
@@ -101,7 +101,9 @@ function App() {
               {/* Public pages */}
               <Route path="about" element={<AboutUs />} />
               <Route path="pods" element={<OurPods />} />
+
               <Route path="searchpods" element={<SearchPods />} />
+              <Route path="pods/:id" element={<PodDetails />}/>
               <Route path="profile" element={<ProfileLogIn />} />
 
 

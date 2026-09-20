@@ -345,12 +345,12 @@ const OurPods = () => {
                       </div>
 
                       <Link
-                        to={`/searchpods?podId=${podId}`}
-                        className="rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-400"
-                      >
-                        View Pod
-                      </Link>
-                    </div>
+                    to={`/pods/${podId}`}
+                    className="rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-400"
+                >
+                    View Pod
+                </Link>
+                                    </div>
                   </div>
                 </article>
               );
